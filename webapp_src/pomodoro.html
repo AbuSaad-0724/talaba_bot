@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pomodoro Focus</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --accent-purple: #8b5cf6;
+            --text-primary: #f8fafc;
+            --glass-bg: rgba(21, 27, 43, 0.6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient Background */
+        .ambient-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 60%);
+            z-index: 0;
+            animation: breathe 8s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        .container {
+            z-index: 1;
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: rgba(139, 92, 246, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .timer-circle {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 8px solid rgba(255, 255, 255, 0.05);
+            margin: 0 auto 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-ring {
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            width: 280px;
+            height: 280px;
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring circle {
+            fill: transparent;
+            stroke: var(--accent-purple);
+            stroke-width: 8;
+            stroke-dasharray: 880;
+            /* 2 * PI * r (approx) */
+            stroke-dashoffset: 0;
+            transition: stroke-dashoffset 0.5s;
+            stroke-linecap: round;
+        }
+
+        .time-display {
+            font-size: 64px;
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+
+        .status-text {
+            font-size: 16px;
+            color: #94a3b8;
+            margin-top: 8px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn {
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent-purple);
+            color: white;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* Sound Toggle */
+        .sound-toggle {
+            margin-top: 30px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .sound-toggle.active {
+            color: var(--accent-purple);
+            background: rgba(139, 92, 246, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="ambient-bg"></div>
+
+    <button class="back-btn" onclick="window.history.back()">
+        <i class="bi bi-arrow-left"></i>
+    </button>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="setMode('pomodoro')">Focus</div>
+            <div class="tab" onclick="setMode('short')">Short Break</div>
+            <div class="tab" onclick="setMode('long')">Long Break</div>
+        </div>
+
+        <div class="timer-circle">
+            <svg class="progress-ring" width="296" height="296">
+                <!-- r=140, cx=148, cy=148 -->
+                <circle cx="148" cy="148" r="140"></circle>
+            </svg>
+            <div>
+                <div class="time-display" id="time">25:00</div>
+                <div class="status-text" id="status">Vaqt: Dars qilish</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-secondary" onclick="resetTimer()">
+                <i class="bi bi-arrow-counterclockwise"></i>
+            </button>
+            <button class="btn btn-primary" id="toggleBtn" onclick="toggleTimer()">
+                <i class="bi bi-play-fill" style="font-size: 32px;"></i>
+            </button>
+        </div>
+
+        <div class="sound-toggle" id="soundBtn" onclick="toggleSound()">
+            <i class="bi bi-volume-up-fill"></i>
+            Ambient Ovoz
+        </div>
+    </div>
+
+    <!-- Audio (Rain Sound - Example URL) -->
+    <audio id="bgMusic" loop>
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-1253.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Notification Sound -->
+    <audio id="bellSound">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        let timeLeft = 25 * 60;
+        let totalTime = 25 * 60;
+        let timerId = null;
+        let isRunning = false;
+        let currentMode = 'pomodoro';
+
+        const circle = document.querySelector('.progress-ring circle');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+        circle.style.strokeDashoffset = circumference;
+
+        function setProgress(percent) {
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('time').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+            const percent = ((totalTime - timeLeft) / totalTime) * 100;
+            setProgress(percent);
+        }
+
+        function setMode(mode) {
+            pauseTimer();
+            currentMode = mode;
+
+            // Remove active class
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            // Add active class
+            const index = mode === 'pomodoro' ? 0 : mode === 'short' ? 1 : 2;
+            document.querySelectorAll('.tab')[index].classList.add('active');
+
+            if (mode === 'pomodoro') {
+                totalTime = 25 * 60;
+                document.getElementById('status').textContent = 'Vaqt: Dars qilish';
+                document.documentElement.style.setProperty('--accent-purple', '#8b5cf6');
+            } else if (mode === 'short') {
+                totalTime = 5 * 60;
+                document.getElementById('status').textContent = 'Vaqt: Qisqa tanaffus';
+                document.documentElement.style.setProperty('--accent-purple', '#10b981');
+            } else {
+                totalTime = 15 * 60;
+                document.getElementById('status').textContent = 'Vaqt: Uzun tanaffus';
+                document.documentElement.style.setProperty('--accent-purple', '#3b82f6');
+            }
+            timeLeft = totalTime;
+            updateDisplay();
+            setProgress(0);
+        }
+
+
+        function toggleTimer() {
+            if (isRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            document.getElementById('toggleBtn').innerHTML = '<i class="bi bi-pause-fill" style="font-size: 32px;"></i>';
+
+            timerId = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerId);
+                    document.getElementById('bellSound').play();
+                    tg.HapticFeedback.notificationOccurred('success');
+                    tg.showAlert('Vaqt tugadi!');
+                    resetTimer();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerId);
+            document.getElementById('toggleBtn').innerHTML = '<i class="bi bi-play-fill" style="font-size: 32px;"></i>';
+        }
+
+        function resetTimer() {
+            pauseTimer();
+            setMode(currentMode);
+        }
+
+        // Sound Logic
+        let soundOn = false;
+        const bgMusic = document.getElementById('bgMusic');
+        bgMusic.volume = 0.3;
+
+        function toggleSound() {
+            soundOn = !soundOn;
+            const btn = document.getElementById('soundBtn');
+            if (soundOn) {
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="bi bi-volume-up-fill"></i> Ovoz yoqilgan';
+                bgMusic.play().catch(e => console.log(e));
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="bi bi-volume-mute-fill"></i> Ambient Ovoz';
+                bgMusic.pause();
+            }
+        }
+
+        // Init
+        updateDisplay();
+        setProgress(0); // Initially empty circle (start)
+        // Wait, normally progress fills up. Or empties. Let's make it fill.
+        // Actually, let's make it start full and reduce? Or start empty and fill?
+        // Standard pomodoro: circle completes as time passes.
+        // My setProgress fills it based on percent.
+        // ((totalTime - timeLeft) / totalTime) -> 0 at start, 1 at end. Correct.
+    </script>
+</body>
+
+</html>

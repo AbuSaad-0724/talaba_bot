@@ -46,22 +46,23 @@ RESOURCES = {
         ]
     }
 }
+from utils.texts import get_all_translations
 
-@router.message(F.text == "📚 Bepul manbalar")
-async def show_resource_categories(message: types.Message):
-    builder = InlineKeyboardBuilder()
-    
-    for key, data in RESOURCES.items():
-        builder.button(text=data["title"], callback_data=f"resource_{key}")
-    
-    builder.adjust(2)
-    
-    await message.answer(
-        "📚 **Bepul O'quv Manbalar**\n\n"
-        "Qaysi fan bo'yicha manba kerak?",
-        reply_markup=builder.as_markup(),
-        parse_mode="Markdown"
-    )
+# @router.message(F.text.in_(get_all_translations('btn_free_resources')))
+# async def show_resource_categories(message: types.Message):
+#     builder = InlineKeyboardBuilder()
+#     
+#     for key, data in RESOURCES.items():
+#         builder.button(text=data["title"], callback_data=f"resource_{key}")
+#     
+#     builder.adjust(2)
+#     
+#     await message.answer(
+#         "📚 **Bepul O'quv Manbalar**\n\n"
+#         "Qaysi fan bo'yicha manba kerak?",
+#         reply_markup=builder.as_markup(),
+#         parse_mode="Markdown"
+#     )
 
 @router.callback_query(F.data.startswith("resource_"))
 async def show_resources(callback: types.CallbackQuery):

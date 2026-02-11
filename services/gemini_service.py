@@ -1,131 +1,139 @@
 import google.generativeai as genai
-from config import GEMINI_API_KEY
+from groq import Groq
+import httpx
+from config import GEMINI_API_KEY, GROQ_API_KEY, OPENROUTER_API_KEY, MISTRAL_API_KEY, TIMEZONE
 import logging
-import base64
+import datetime
+import pytz
 
 logger = logging.getLogger(__name__)
 
-# Configure Gemini
-if GEMINI_API_KEY:
-    try:
-        genai.configure(api_key=GEMINI_API_KEY)
-        logger.info("Gemini API configured successfully")
-    except Exception as e:
-        logger.error(f"Gemini API Init Error: {e}")
+# System Instructions
+SYSTEM_PROMPT = """Sen 'Talaba Servis Bot'ning aqlli va kishiga do'stona munosabatda bo'luvchi AI yordamchisisan. 
+Sening vazifang talabalarga o'qishda, masalalar yechishda va savollarga javob berishda yordam berish.
+Javoblaring:
+- O'zbek tilida, aniq va batafsil bo'lsin.
+- Agar foydalanuvchi "salom" desa, samimiy javob ber. 
+- Ma'lumotlarni chiroyli formatda (markdown) taqdim et.
+- Hech qachon javobni "Xayr" yoki ma'nosiz so'zlar bilan asossiz boshlama.
+"""
 
-# ===== TEXT GENERATION =====
+def get_current_context():
+    tz = pytz.timezone(TIMEZONE)
+    now = datetime.datetime.now(tz)
+    return f"\nHozirgi vaqt: {now.strftime('%Y-%m-%d %H:%M:%S')}, kun: {now.strftime('%A')}."
 
-async def gemini_generate(prompt: str, system_instruction: str = None, max_tokens: int = 500):
-    """Generate text using Gemini"""
+# Providers setup
+gemini_keys = [k.strip() for k in GEMINI_API_KEY.split(",")] if GEMINI_API_KEY else []
+current_gemini_index = 0
+
+def configure_gemini():
+    if gemini_keys:
+        genai.configure(api_key=gemini_keys[current_gemini_index])
+
+configure_gemini()
+
+async def gemini_chat_logic(message: str, history: list = None):
     try:
         model = genai.GenerativeModel(
-            'gemini-1.5-flash',
-            system_instruction=system_instruction
+            model_name='gemini-1.5-flash',
+            system_instruction=SYSTEM_PROMPT + get_current_context()
         )
         
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                max_output_tokens=max_tokens,
-                temperature=0.7,
-            )
-        )
+        formatted_history = []
+        if history:
+            for msg in history[-6:]:
+                role = "user" if msg.get("role") == "user" else "model"
+                formatted_history.append({"role": role, "parts": [msg.get("content", "")]})
+        
+        chat = model.start_chat(history=formatted_history)
+        response = chat.send_message(message)
         return response.text
     except Exception as e:
-        logger.error(f"Gemini Generate Error: {e}")
-        return f"Xatolik yuz berdi: {str(e)}"
+        logger.error(f"Gemini Logic Error: {e}")
+        raise e
 
-# ===== CHAT (with history) =====
+async def groq_chat_logic(message: str, history: list = None):
+    if not GROQ_API_KEY:
+        raise Exception("Groq API key missing")
+    
+    client = Groq(api_key=GROQ_API_KEY)
+    messages = [{"role": "system", "content": SYSTEM_PROMPT + get_current_context()}]
+    
+    if history:
+        for msg in history[-6:]:
+            messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+    
+    messages.append({"role": "user", "content": message})
+    
+    completion = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=messages,
+        temperature=0.7,
+        max_tokens=2048
+    )
+    return completion.choices[0].message.content
+
+async def openrouter_chat_logic(message: str, history: list = None):
+    if not OPENROUTER_API_KEY:
+        raise Exception("OpenRouter key missing")
+        
+    async with httpx.AsyncClient() as client:
+        full_prompt = f"{SYSTEM_PROMPT}\n{get_current_context()}\n\nUser: {message}"
+        response = await client.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "HTTP-Referer": "https://github.com/AbuSaad-0724/talaba_bot",
+            },
+            json={
+                "model": "google/gemini-2.0-flash-exp:free", # Eng yaxshi bepul model
+                "messages": [{"role": "user", "content": full_prompt}]
+            },
+            timeout=20.0
+        )
+        data = response.json()
+        if 'choices' in data:
+            return data['choices'][0]['message']['content']
+        raise Exception(f"OpenRouter Error: {data}")
 
 async def gemini_chat(user_message: str, chat_history: list = None):
-    """Chat with context using Gemini"""
+    # 1. Try Gemini
     try:
-        model = genai.GenerativeModel(
-            'gemini-1.5-flash',
-            system_instruction="Sen professional o'qituvchisan. Talabalarga tushunarli va aniq javoblar ber. Qisqa va mazmunli bo'lsin."
-        )
+        return await gemini_chat_logic(user_message, chat_history)
+    except Exception:
+        pass
         
-        # Start chat with history
-        chat = model.start_chat(history=[])
-        
-        # Add history if exists
-        if chat_history:
-            for msg in chat_history[-10:]:  # Last 5 exchanges
-                role = "user" if msg["role"] == "user" else "model"
-                chat.history.append({
-                    "role": role,
-                    "parts": [msg["content"]]
-                })
-        
-        # Send message
-        response = chat.send_message(user_message)
-        return response.text
-        
-    except Exception as e:
-        logger.error(f"Gemini Chat Error: {e}")
-        return "Javob berishda xatolik yuz berdi. Qaytadan urinib ko'ring."
-
-# ===== VISION (Image Analysis) =====
-
-async def gemini_vision(image_path: str, prompt: str):
-    """Analyze image using Gemini Vision"""
+    # 2. Try Groq (Super fast fallback)
     try:
-        # Read image
-        with open(image_path, "rb") as image_file:
-            image_data = image_file.read()
-        
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        response = model.generate_content([
-            prompt,
-            {"mime_type": "image/jpeg", "data": image_data}
-        ])
-        
-        return response.text
-        
+        return await groq_chat_logic(user_message, chat_history)
+    except Exception:
+        pass
+
+    # 3. Try OpenRouter (Final fallback)
+    try:
+        return await openrouter_chat_logic(user_message, chat_history)
     except Exception as e:
-        logger.error(f"Gemini Vision Error: {e}")
-        return f"Rasmni tahlil qilishda xatolik: {str(e)}"
+        logger.error(f"All AI providers failed: {e}")
+        return "Hozirda tizimda texnik ishlar ketmoqda. Iltimos, birozdan so'ng savol bering."
 
-# ===== SPECIFIC FUNCTIONS =====
-
-async def gemini_summarize(text: str):
-    """Summarize text"""
-    prompt = f"Quyidagi matnni qisqacha konspekt qil:\n\n{text[:4000]}"
-    system = "Sen o'zbek tilidagi matnlarni qisqacha va mazmunli konspekt qilib beruvchi yordamchisan."
-    return await gemini_generate(prompt, system, max_tokens=500)
-
-async def gemini_generate_referat(topic: str):
-    """Generate referat"""
-    prompt = f"Mavzu: {topic}"
-    system = "Sen talabalarga referat yozishda yordam berasan. Matn chuqur va akademik uslubda, o'zbek tilida bo'lsin. Mavzu bo'yicha kamida 5 ta bo'limdan iborat reja va batafsil matn tayyorla."
-    return await gemini_generate(prompt, system, max_tokens=3500)
-
-async def gemini_generate_test(topic: str, count: int = 5):
-    """Generate test questions"""
-    prompt = f"Mavzu: {topic}"
-    system = f"Berilgan mavzu bo'yicha aniq {count} ta test (MCQ) yarat. Har bir testda 4 ta variant (A, B, C, D) bo'lsin va oxirida to'g'ri javoblarni ro'yxat ko'rinishida ko'rsat. Til: O'zbekcha."
-    return await gemini_generate(prompt, system, max_tokens=2000)
-
-async def gemini_generate_ppt_content(topic: str):
-    """Generate presentation content"""
-    prompt = f"Mavzu: {topic}"
-    system = "Sen professional prezentatsiya tayyorlovchi yordamchisan. Berilgan mavzu bo'yicha 7-10 ta slayddan iborat reja va har bir slayd uchun qisqa, mazmunli matn yozib ber. Har bir yangi slaydni '|||' belgisi bilan boshla. Format:\n||| Sarlavha\nMatn...\n||| Keyingi Sarlavha\nMatn...\nTil: O'zbekcha."
-    return await gemini_generate(prompt, system, max_tokens=3000)
-
+# Helper functions
+async def gemini_summarize(text: str): return await gemini_chat(f"Ushbu matnni batafsil konspekt qil:\n\n{text}")
+async def gemini_generate_referat(topic: str): return await gemini_chat(f"'{topic}' mavzusida akademik referat yoz.")
+async def gemini_generate_test(topic: str, count: int = 5): return await gemini_chat(f"'{topic}' mavzusida {count} ta murakkab test savollarini yarat.")
 async def gemini_solve_homework(image_path: str):
-    """Solve homework from image"""
-    prompt = "Bu masalani qadam-baqadam yech va tushuntir. Matematika, fizika yoki kimyo masalasi bo'lishi mumkin. O'zbek tilida javob ber."
-    return await gemini_vision(image_path, prompt)
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        with open(image_path, "rb") as f:
+            img = [{"mime_type": "image/jpeg", "data": f.read()}]
+        response = model.generate_content([SYSTEM_PROMPT + "\nUshbu rasmdagi masalani yech.", img[0]])
+        return response.text
+    except:
+        return "Rasm tahlilida xatolik. Iltimos, matn ko'rinishida yozing."
 
-async def gemini_check_essay(essay_text: str):
-    """Check essay"""
-    prompt = f"Quyidagi inshoni tekshir:\n\n{essay_text[:3000]}"
-    system = "Sen professional insho tekshiruvchisan. Berilgan matnni tahlil qilib:\n1. Grammatika xatolarini top\n2. Uslub va ifoda tavsiyalari ber\n3. Umumiy baho ber (5 ball)\n4. Yaxshilash yo'llarini ko'rsat\nO'zbek tilida javob ber."
-    return await gemini_generate(prompt, system, max_tokens=800)
+async def gemini_generate_flashcards(topic: str, count: int = 10): return await gemini_chat(f"'{topic}' mavzusida {count} ta flashcard yarat.")
+async def gemini_generate_ppt_content(topic: str): return await gemini_chat(f"'{topic}' mavzusida slaydlar uchun reja va matn tayyorla.")
 
-async def gemini_generate_flashcards(topic: str, count: int = 10):
-    """Generate flashcards"""
-    prompt = f"Mavzu: {topic}"
-    system = f"Sen flashcard yaratuvchisan. Berilgan mavzu bo'yicha {count} ta flashcard yarat. Har bir flashcard:\nSAVOL: [savol]\nJAVOB: [qisqa javob]\nFormat: O'zbek tilida, aniq va qisqa."
-    return await gemini_generate(prompt, system, max_tokens=1000)
+async def gemini_generate(prompt: str, system_instruction: str = None, max_tokens: int = 500):
+    """Alias for gemini_chat to support existing code"""
+    return await gemini_chat(prompt)

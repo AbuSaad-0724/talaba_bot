@@ -143,7 +143,6 @@
 
 **Bepul Funksiyalar:**
 - Test Generator
-- GPA Calculator
 - Deadline Manager
 - Konspekt (Fayl/Foto)
 - Kutubxona

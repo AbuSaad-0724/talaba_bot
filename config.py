@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Telegram Bot Token
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -14,6 +14,21 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Gemini API Key (BEPUL!)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Groq API Key
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+# OpenRouter API Key
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+# Mistral API Key
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+
+# WebApp URL
+WEBAPP_URL = os.getenv("WEBAPP_URL")
+
+# Backend API Server URL (Ngrok or Public IP)
+SERVER_URL = os.getenv("SERVER_URL", "")
 
 # Payment Details
 HUMO_CARD = os.getenv("HUMO_CARD", "9860 1201 1367 9696")

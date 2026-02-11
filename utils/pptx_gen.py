@@ -1,19 +1,32 @@
 from pptx import Presentation
 from pptx.util import Inches, Pt
-from pptx.util import Inches, Pt
 import os
+import re
+import logging
 from utils.template_gen import create_starter_template, TEMPLATE_PATH
+
+logger = logging.getLogger(__name__)
 
 def create_presentation_pptx(topic: str, content: str, output_path: str, template_path: str = None):
     if not template_path:
         if not os.path.exists(TEMPLATE_PATH):
-            create_starter_template()
-        template_path = TEMPLATE_PATH
+            try:
+                create_starter_template()
+            except Exception as e:
+                logger.error(f"Failed to create template: {e}")
+                template_path = None
+        
+        if not template_path or not os.path.exists(TEMPLATE_PATH if template_path else TEMPLATE_PATH):
+            template_path = None
     
     try:
-        prs = Presentation(template_path)
-    except Exception:
-        # Fallback if template is corrupt or not found
+        if template_path and os.path.exists(template_path):
+            prs = Presentation(template_path)
+        else:
+            prs = Presentation()
+            logger.warning("Using blank presentation - no template found")
+    except Exception as e:
+        logger.error(f"PPTX Template load error: {e}. Using blank presentation.")
         prs = Presentation()
     
     # Title Slide
@@ -25,10 +38,6 @@ def create_presentation_pptx(topic: str, content: str, output_path: str, templat
     title.text = topic
     subtitle.text = "Talaba Bot tomonidan tayyorlandi"
     
-    import re
-    import logging
-    logger = logging.getLogger(__name__)
-
     # Content Slides
     # Strategy 1: Try strict delimiter "|||"
     sections = content.split("|||")
@@ -70,6 +79,11 @@ def create_presentation_pptx(topic: str, content: str, output_path: str, templat
                  slide_title = parts[0]
                  slide_text = parts[1]
 
+        # Check if slide layouts exist
+        if len(prs.slide_layouts) < 2:
+            logger.error("Not enough slide layouts in presentation")
+            break
+            
         bullet_slide_layout = prs.slide_layouts[1]
         slide = prs.slides.add_slide(bullet_slide_layout)
         shapes = slide.shapes
@@ -88,9 +102,15 @@ def create_presentation_pptx(topic: str, content: str, output_path: str, templat
             
     if valid_slides_count == 0:
         # Emergency fallback: Create one slide with everything
-        slide = prs.slides.add_slide(prs.slide_layouts[1])
-        slide.shapes.title.text = "Taqdimot"
-        slide.shapes.placeholders[1].text_frame.text = content[:1000] # Limit char count
+        logger.warning("No valid slides created, using emergency fallback")
+        if len(prs.slide_layouts) > 1:
+            slide = prs.slides.add_slide(prs.slide_layouts[1])
+            slide.shapes.title.text = "Taqdimot"
+            slide.shapes.placeholders[1].text_frame.text = content[:1000] # Limit char count
+        else:
+            # Last resort - add to title slide
+            slide.shapes.title.text = topic
+            slide.placeholders[1].text_frame.text = content[:500]
 
     prs.save(output_path)
     return output_path

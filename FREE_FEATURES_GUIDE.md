@@ -135,9 +135,8 @@ Botingizga oddiy (bepul) foydalanuvchilar uchun 3 ta yangi qimmatli funksiya qo'
 | **Kunlik Quiz** | ✅ Cheksiz | ✅ Cheksiz |
 | **Motivatsiya** | ✅ Cheksiz | ✅ Cheksiz |
 | **Bepul Manbalar** | ✅ Cheksiz | ✅ Cheksiz |
-| **GPA Hisoblash** | ✅ Cheksiz | ✅ Cheksiz |
-| **Deadline** | ✅ Cheksiz | ✅ Cheksiz |
 | **Test Generator** | ✅ Cheksiz | ✅ Cheksiz |
+| **Deadline** | ✅ Cheksiz | ✅ Cheksiz |
 | **Kutubxona** | ✅ Cheksiz | ✅ Cheksiz |
 | **Konspekt (Fayl/Foto)** | ✅ Cheksiz | ✅ Cheksiz |
 | **Konspekt (Audio)** | ❌ | ✅ Premium |
@@ -186,7 +185,7 @@ Botingizga oddiy (bepul) foydalanuvchilar uchun 3 ta yangi qimmatli funksiya qo'
 
 4. **Success Stories:**
    ```
-   "📈 Premium foydalanuvchilar GPA'ni o'rtacha 0.5 ball oshirdi!"
+   "📈 Premium foydalanuvchilar o'zlashtirishni  2 barobar oshirdi!"
    ```
 
 ---

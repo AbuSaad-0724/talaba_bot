@@ -38,8 +38,9 @@ def get_cancel_kb():
     builder = ReplyKeyboardBuilder()
     builder.row(types.KeyboardButton(text="❌ Bekor qilish"))
     return builder.as_markup(resize_keyboard=True)
+from utils.texts import get_all_translations
 
-@router.message(F.text == "📝 Vazifa Yechuvchi")
+@router.message(F.text.in_(get_all_translations('btn_solver')))
 async def start_homework_solver(message: types.Message, state: FSMContext):
     log_event(message.from_user.id, "Vazifa Yechuvchi")
     if not is_premium(message.from_user.id):
@@ -68,7 +69,7 @@ async def start_homework_solver(message: types.Message, state: FSMContext):
     await message.answer(
         "📝 **Vazifa Yechuvchi**\n\n"
         "Vazifa yoki masalaning rasmini yuboring.\n\n"
-        f"📊 Bugun qolgan: **Cheksiz**\n\n"
+
         "💡 Yaxshi natija uchun:\n"
         "- Rasm aniq bo'lsin\n"
         "- Matn o'qilishi oson bo'lsin\n"
@@ -112,8 +113,7 @@ async def handle_homework_image(message: types.Message, state: FSMContext):
         
         from ..common import get_main_menu
         await message.answer(
-            f"✅ **Yechim:**\n\n{solution}\n\n"
-            f"📊 Bugun qolgan: **Cheksiz**",
+            f"✅ **Yechim:**\n\n{solution}\n\n",
             reply_markup=get_main_menu(message.from_user.id),
             parse_mode="Markdown"
         )

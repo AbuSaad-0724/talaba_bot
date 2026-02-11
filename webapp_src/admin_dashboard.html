@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Talaba Admin Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0f1219;
+            --bg-sidebar: #13161c;
+            --bg-card: #1a1f2e;
+            --bg-input: #23293a;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --border: rgba(255, 255, 255, 0.08);
+            --radius-sm: 8px;
+            --radius: 16px;
+            --radius-lg: 24px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --font: 'Outfit', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 80px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 0;
+            transition: width 0.3s ease;
+            z-index: 50;
+        }
+
+        .sidebar:hover {
+            width: 200px;
+        }
+
+        .sidebar-header {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            flex-shrink: 0;
+        }
+
+        .nav-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent);
+        }
+
+        .nav-icon {
+            font-size: 20px;
+            min-width: 32px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .nav-text {
+            margin-left: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transition: 0.2s;
+        }
+
+        .sidebar:hover .nav-text {
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        /* Cards & Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card.primary {
+            background: linear-gradient(135deg, var(--accent), #4338ca);
+            border: none;
+        }
+
+        .stat-val {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card.primary .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Tables & Lists */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 12px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .status-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-orange);
+        }
+
+        .status-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        /* Controls */
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            font-family: var(--font);
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            width: 400px;
+            max-width: 90%;
+            border-radius: 20px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 16px 24px;
+            border-radius: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.3s;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Utilities */
+        .hidden {
+            display: none !important;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header"><i class="bi bi-robot"></i></div>
+
+        <div class="nav-item active" onclick="nav('overview', this)">
+            <div class="nav-icon"><i class="bi bi-grid-fill"></i></div>
+            <div class="nav-text">Dashboard</div>
+        </div>
+        <div class="nav-item" onclick="nav('users', this)">
+            <div class="nav-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="nav-text">Users</div>
+        </div>
+        <div class="nav-item" onclick="nav('payments', this)">
+            <div class="nav-icon"><i class="bi bi-credit-card-fill"></i></div>
+            <div class="nav-text">Payments</div>
+        </div>
+        <div class="nav-item" onclick="nav('library', this)">
+            <div class="nav-icon"><i class="bi bi-collection-play-fill"></i></div>
+            <div class="nav-text">Library</div>
+        </div>
+        <div class="nav-item" onclick="nav('broadcast', this)">
+            <div class="nav-icon"><i class="bi bi-megaphone-fill"></i></div>
+            <div class="nav-text">Broadcast</div>
+        </div>
+        <div class="nav-item" onclick="nav('channels', this)">
+            <div class="nav-icon"><i class="bi bi-hdd-network-fill"></i></div>
+            <div class="nav-text">Channels</div>
+        </div>
+        <div class="nav-item" onclick="nav('settings', this)">
+            <div class="nav-icon"><i class="bi bi-gear-fill"></i></div>
+            <div class="nav-text">Settings</div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- OVERVIEW -->
+        <section id="tab-overview" class="tab-view">
+            <header>
+                <div>
+                    <h1>Overview</h1>
+                    <p class="subtitle">Real-time system statistics</p>
+                </div>
+                <button class="btn btn-sm btn-outline" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i>
+                    Refresh</button>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-val" id="ov-users">...</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" style="color: #fbbf24;" id="ov-premium">...</div>
+                    <div class="stat-label">Premium Members</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" style="color: var(--accent-green);" id="ov-today">...</div>
+                    <div class="stat-label">New Today</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="ov-uptime">...</div>
+                    <div class="stat-label">System Uptime</div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Activity Trend</span>
+                    </div>
+                    <canvas id="chart-activity" height="200"></canvas>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Storage</span>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <h2 id="ov-disk">...%</h2>
+                        <p class="subtitle">Disk Usage</p>
+                        <div
+                            style="height: 6px; background: var(--bg-input); border-radius: 3px; margin-top: 10px; overflow: hidden;">
+                            <div id="disk-bar" style="height: 100%; background: var(--accent); width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- USERS -->
+        <section id="tab-users" class="tab-view hidden">
+            <header>
+                <h1>User Management</h1>
+            </header>
+            <div class="card">
+                <div class="flex-row">
+                    <input type="text" placeholder="Search by name or ID..." id="user-search"
+                        oninput="debounceSearch(this.value)">
+                    <button class="btn btn-outline" onclick="loadUsers('all')">All</button>
+                    <button class="btn btn-outline" onclick="loadUsers('premium')">Premium</button>
+                    <button class="btn btn-outline" onclick="exportUsers()"><i class="bi bi-download"></i></button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Username</th>
+                                <th>Joined</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body">
+                            <tr>
+                                <td colspan="5" style="text-align:center;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination" style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+                    <button class="btn btn-sm btn-outline" onclick="prevPage()">Prev</button>
+                    <button class="btn btn-sm btn-outline" onclick="nextPage()">Next</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAYMENTS -->
+        <section id="tab-payments" class="tab-view hidden">
+            <header>
+                <h1>Payments</h1>
+            </header>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="pay-pending" style="color: var(--accent-orange);">0</div>
+                    <div class="stat-label">Pending Reviews</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="pay-total" style="color: var(--accent-green);">0</div>
+                    <div class="stat-label">Total Revenue (Est.)</div>
+                </div>
+            </div>
+            <div class="card">
+                <div id="payments-list">Loading...</div>
+            </div>
+        </section>
+
+        <!-- LIBRARY -->
+        <section id="tab-library" class="tab-view hidden">
+            <header>
+                <h1>Library Content</h1>
+                <button class="btn" onclick="openModal('modal-add-lib')"><i class="bi bi-plus-lg"></i> Add
+                    Material</button>
+            </header>
+
+            <div class="flex-row" style="flex-wrap: wrap;">
+                <button class="btn btn-sm btn-outline" onclick="loadLibrary('all')">All</button>
+                <button class="btn btn-sm btn-outline" onclick="loadLibrary('Matematika')">Math</button>
+                <button class="btn btn-sm btn-outline" onclick="loadLibrary('Ingliz tili')">English</button>
+                <button class="btn btn-sm btn-outline" onclick="loadLibrary('Fizika')">Physics</button>
+            </div>
+
+            <div class="card" id="library-list">
+                Loading...
+            </div>
+        </section>
+
+        <!-- CHANNELS -->
+        <section id="tab-channels" class="tab-view hidden">
+            <header>
+                <h1>Sponsorship Channels</h1>
+                <button class="btn" onclick="openModal('modal-add-channel')"><i class="bi bi-plus-lg"></i> Add
+                    Channel</button>
+            </header>
+            <p class="subtitle" style="margin-bottom: 20px;">Users must subscribe to these channels to use the bot.</p>
+
+            <div class="card" id="channels-list">
+                <!-- Channels loaded here -->
+            </div>
+
+            <header style="margin-top: 40px;">
+                <h1>Admin Team</h1>
+                <button class="btn btn-outline" onclick="openModal('modal-add-admin')"><i class="bi bi-person-plus"></i>
+                    Add Admin</button>
+            </header>
+            <div class="card" id="admins-list" style="margin-top: 20px;">
+                <!-- Admins loaded here -->
+            </div>
+        </section>
+
+        <!-- BROADCAST -->
+        <section id="tab-broadcast" class="tab-view hidden">
+            <header>
+                <h1>Broadcast</h1>
+            </header>
+            <div class="card" style="max-width: 600px;">
+                <label style="display: block; margin-bottom: 8px;">Message Content (Markdown)</label>
+                <textarea id="broadcast-text" rows="6" placeholder="Hello users..."></textarea>
+
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                    <input type="checkbox" id="bc-pin" style="width: auto; margin:0;">
+                    <label>Pin Message</label>
+                </div>
+
+                <button class="btn" onclick="startBroadcast()" id="btn-broadcast"><i class="bi bi-send"></i> Send to All
+                    Users</button>
+            </div>
+
+            <div class="card hidden" id="bc-status-card" style="max-width: 600px;">
+                <div class="card-header"><span class="card-title">Broadcast Progress</span></div>
+                <div
+                    style="height: 10px; background: var(--bg-input); border-radius: 5px; overflow: hidden; margin: 20px 0;">
+                    <div id="bc-progress"
+                        style="height: 100%; width: 0%; background: var(--accent-green); transition: width 0.5s;"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted);">
+                    <span id="bc-sent">Sent: 0</span>
+                    <span id="bc-total">Total: 0</span>
+                </div>
+                <button class="btn btn-danger btn-sm" style="margin-top: 10px;" onclick="stopBroadcast()">Stop
+                    Broadcast</button>
+            </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="tab-settings" class="tab-view hidden">
+            <header>
+                <h1>Settings</h1>
+            </header>
+            <div class="stats-grid">
+                <div class="card">
+                    <div class="card-header"><span class="card-title">AI Configuration</span></div>
+                    <label>AI Provider</label>
+                    <select id="set-ai-provider" onchange="saveSetting('ai_provider', this.value)">
+                        <option value="gemini">Google Gemini</option>
+                        <option value="openai">OpenAI GPT-4</option>
+                        <option value="groq">Groq</option>
+                    </select>
+                    <label>Daily Limit</label>
+                    <input type="number" id="set-limit" onblur="saveSetting('daily_limit', this.value)">
+                </div>
+                <div class="card">
+                    <div class="card-header"><span class="card-title">System Control</span></div>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <span>Maintenance Mode</span>
+                        <select style="width: 100px; margin:0;" id="set-maint"
+                            onchange="saveSetting('maintenance', this.value)">
+                            <option value="false">Off</option>
+                            <option value="true">On</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-danger" onclick="if(confirm('Clear all logs?')) alert('Logs cleared')">Clear
+                        System Logs</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">
+        <i class="bi bi-info-circle-fill" style="color: var(--accent);"></i>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Add Library -->
+    <div class="modal-overlay" id="modal-add-lib">
+        <div class="modal-box">
+            <h3>Add Material</h3>
+            <input type="text" id="lib-title" placeholder="Title">
+            <select id="lib-subject">
+                <option value="Matematika">Matematika</option>
+                <option value="Fizika">Fizika</option>
+                <option value="Ingliz tili">Ingliz tili</option>
+                <option value="Tarix">Tarix</option>
+            </select>
+            <select id="lib-type">
+                <option value="pdf">PDF Document</option>
+                <option value="video">Video</option>
+                <option value="image">Image</option>
+            </select>
+            <input type="file" id="lib-file">
+            <input type="text" id="lib-url" placeholder="Or enter URL directly">
+            <div class="flex-row">
+                <button class="btn" style="flex:1" onclick="submitLibrary()">Add</button>
+                <button class="btn btn-outline" style="flex:1" onclick="closeModal('modal-add-lib')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Actions -->
+    <div class="modal-overlay" id="modal-user">
+        <div class="modal-box">
+            <h3 id="u-modal-name">User</h3>
+            <p class="subtitle" id="u-modal-id" style="margin-bottom: 20px;">ID: ...</p>
+            <div style="display: grid; gap: 10px;">
+                <button class="btn" onclick="openUserMessage()">Send Message</button>
+                <button class="btn btn-outline" onclick="doUserAction('premium_add')">Grant Premium (30 days)</button>
+                <button class="btn btn-outline" onclick="doUserAction('premium_remove')">Revoke Premium</button>
+                <button class="btn btn-danger" onclick="doUserAction('ban')">Ban User</button>
+                <button class="btn btn-outline" onclick="closeModal('modal-user')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Message -->
+    <div class="modal-overlay" id="modal-msg">
+        <div class="modal-box">
+            <h3>Send Message</h3>
+            <textarea id="msg-text" rows="4" placeholder="Your message..."></textarea>
+            <div class="flex-row">
+                <button class="btn" onclick="sendDirectMessage()">Send</button>
+                <button class="btn btn-outline" onclick="closeModal('modal-msg')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Action -->
+    <div class="modal-overlay" id="modal-pay">
+        <div class="modal-box">
+            <h3>Payment Review</h3>
+            <p id="pay-info" class="subtitle" style="margin-bottom: 15px;">User Info</p>
+
+            <div style="background:var(--bg-input); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <p style="font-size: 12px; color: var(--text-muted);">Proof ID</p>
+                <code id="pay-proof" style="word-break: break-all;">...</code>
+            </div>
+
+            <div class="flex-row">
+                <button class="btn" style="background: var(--accent-green); flex:1"
+                    onclick="doPayment('approved')">Approve</button>
+                <button class="btn btn-danger" style="flex:1" onclick="doPayment('rejected')">Reject</button>
+            </div>
+            <button class="btn btn-outline" style="width: 100%; margin-top: 10px;"
+                onclick="closeModal('modal-pay')">Close</button>
+        </div>
+    </div>
+
+    <!-- Add Channel -->
+    <div class="modal-overlay" id="modal-add-channel">
+        <div class="modal-box">
+            <h3>Add Channel</h3>
+            <input type="text" id="ch-title" placeholder="Channel Title">
+            <input type="text" id="ch-url" placeholder="Link (https://t.me/...)">
+            <div class="flex-row">
+                <button class="btn" onclick="addChannel()">Add</button>
+                <button class="btn btn-outline" onclick="closeModal('modal-add-channel')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Admin -->
+    <div class="modal-overlay" id="modal-add-admin">
+        <div class="modal-box">
+            <h3>Add New Admin</h3>
+            <input type="number" id="adm-id" placeholder="Telegram User ID">
+            <input type="text" id="adm-name" placeholder="Name">
+            <div class="flex-row">
+                <button class="btn" onclick="addAdmin()">Add</button>
+                <button class="btn btn-outline" onclick="closeModal('modal-add-admin')">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- INIT ---
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        const apiBase = (new URLSearchParams(window.location.search).get('server') || 'http://localhost:8080').replace(/\/$/, '');
+
+        // State
+        let currentUser = null;
+        let currentPayId = null;
+        let userPage = 0;
+
+        // --- NAVIGATION ---
+        function nav(tabId, el) {
+            document.querySelectorAll('.tab-view').forEach(t => t.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            el.classList.add('active');
+
+            // Auto load
+            if (tabId === 'users') loadUsers();
+            if (tabId === 'payments') loadPayments();
+            if (tabId === 'library') loadLibrary('all');
+            if (tabId === 'channels') loadChannels();
+            if (tabId === 'settings') loadSettings();
+        }
+
+        // --- API HELPER ---
+        async function api(endpoint, method = 'GET', body = null) {
+            const headers = {
+                'X-Telegram-Init-Data': tg.initData || '',
+                'ngrok-skip-browser-warning': 'true'
+            };
+            if (body && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
+
+            console.log(`API Call: ${method} ${endpoint}`);
+
+            const res = await fetch(`${apiBase}/api/admin${endpoint}`, {
+                method, headers, body: (body && !(body instanceof FormData)) ? JSON.stringify(body) : body
+            });
+
+            if (res.status === 403) { toast('Auth Error', 'error'); throw 'Auth'; }
+            return await res.json();
+        }
+
+        function toast(msg, type = 'info') {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            t.style.borderLeft = type === 'error' ? '4px solid red' : '4px solid var(--accent)';
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // --- OVERVIEW ---
+        // --- OVERVIEW ---
+        async function loadStats() {
+            // System Status
+            try {
+                const d = await api('/system/status');
+                if (d) {
+                    document.getElementById('ov-disk').innerText = (d.disk_percent || 0) + '%';
+                    document.getElementById('disk-bar').style.width = (d.disk_percent || 0) + '%';
+                    document.getElementById('ov-uptime').innerText = d.uptime_formatted || 'N/A';
+                }
+            } catch (e) {
+                console.error("System status error:", e);
+                document.getElementById('ov-uptime').innerText = 'Error';
+            }
+
+            // Overview Stats
+            try {
+                const stats = await api('/stats/overview');
+                if (stats) {
+                    document.getElementById('ov-users').innerText = stats.total_users || 0;
+                    document.getElementById('ov-premium').innerText = stats.premium_users || 0;
+                    document.getElementById('ov-today').innerText = stats.new_today || 0;
+                }
+            } catch (e) {
+                console.error("Overview stats error:", e);
+            }
+        }
+
+        // --- USERS ---
+        async function loadUsers(filter = 'all') {
+            const body = document.getElementById('user-table-body');
+            body.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading...</td></tr>';
+
+            try {
+                // Basic fetch, advanced pagination/filtering support is minimal in backend for now
+                const res = await api('/users?limit=20&offset=' + (userPage * 20));
+                // The backend returns {users: [...]}
+                if (!res.users || res.users.length === 0) {
+                    body.innerHTML = '<tr><td colspan="5" style="text-align:center;">No users found</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = res.users.map(u => `
+                <tr onclick="openUserModal('${u.id}', '${u.name}')">
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div class="avatar">${u.name ? u.name[0] : 'U'}</div>
+                            <div>${u.name}</div>
+                        </div>
+                    </td>
+                    <td>@${u.username || '-'}</td>
+                    <td>${u.joined.split('T')[0]}</td>
+                    <td>${u.is_premium ? '<span class="status-badge status-warning">Premium</span>' : '<span class="status-badge status-success">Free</span>'}</td>
+                    <td><button class="btn btn-sm btn-outline"><i class="bi bi-three-dots"></i></button></td>
+                </tr>
+            `).join('');
+            } catch (e) { body.innerHTML = 'Error'; }
+        }
+
+        function openUserModal(id, name) {
+            currentUser = id;
+            document.getElementById('u-modal-name').innerText = name;
+            document.getElementById('u-modal-id').innerText = 'ID: ' + id;
+            openModal('modal-user');
+        }
+
+        async function doUserAction(action) {
+            try {
+                await api('/user/action', 'POST', { user_id: currentUser, action });
+                toast('Action successful');
+                closeModal('modal-user');
+                loadUsers();
+            } catch (e) { toast('Error', 'error'); }
+        }
+
+        // --- DM ---
+        function openUserMessage() {
+            closeModal('modal-user');
+            openModal('modal-msg');
+        }
+
+        async function sendDirectMessage() {
+            const text = document.getElementById('msg-text').value;
+            if (!text) return toast('Message empty', 'error');
+
+            try {
+                await api('/users/message', 'POST', { user_id: currentUser, text });
+                toast('Message sent');
+                closeModal('modal-msg');
+            } catch (e) { toast('Failed to send', 'error'); }
+        }
+
+        // --- PAYMENTS ---
+        async function loadPayments() {
+            const list = document.getElementById('payments-list');
+            list.innerHTML = 'Loading...';
+            try {
+                const res = await api('/payments/history');
+                document.getElementById('pay-pending').innerText = res.total_pending;
+
+                if (res.history.length === 0) { list.innerHTML = '<div class="empty-state">No payments</div>'; return; }
+
+                list.innerHTML = res.history.map(p => `
+                <div class="list-item" style="display:flex; justify-content:space-between; padding: 15px; border-bottom:1px solid var(--border);" onclick="openPayModal('${p.id}', '${p.proof}', '${p.user}')">
+                     <div>
+                        <strong>${p.user}</strong>
+                        <div style="font-size:12px; color:var(--text-muted);">${p.amount} UZS • ${p.date.split('T')[0]}</div>
+                     </div>
+                     <span class="status-badge status-${p.status === 'approved' ? 'success' : (p.status === 'pending' ? 'warning' : 'danger')}">${p.status}</span>
+                </div>
+            `).join('');
+            } catch (e) { list.innerHTML = 'Error'; }
+        }
+
+        function openPayModal(id, proof, user) {
+            currentPayId = id;
+            document.getElementById('pay-info').innerText = user;
+            document.getElementById('pay-proof').innerText = proof;
+            openModal('modal-pay');
+        }
+
+        async function doPayment(action) {
+            try {
+                await api('/payment/action', 'POST', { payment_id: currentPayId, action });
+                toast('Payment ' + action);
+                closeModal('modal-pay');
+                loadPayments();
+            } catch (e) { toast('Error', 'error'); }
+        }
+
+        // --- LIBRARY ---
+        async function loadLibrary(subject) {
+            const list = document.getElementById('library-list');
+            list.innerHTML = 'Loading...';
+            try {
+                let url = '/library/list?';
+                if (subject && subject !== 'all') url += `subject=${subject}`;
+
+                const res = await api(url);
+
+                // Grouping logic for 'all'
+                if ((!subject || subject === 'all') && res.materials.length > 0) {
+                    const grouped = {};
+                    res.materials.forEach(m => {
+                        if (!grouped[m.subject]) grouped[m.subject] = [];
+                        grouped[m.subject].push(m);
+                    });
+
+                    list.innerHTML = Object.keys(grouped).map(subj => `
+                    <div style="margin-bottom:20px;">
+                        <h3 style="color:var(--accent); font-size:14px; border-bottom:1px solid var(--border); padding-bottom:5px; margin-bottom:10px;">${subj}</h3>
+                        ${grouped[subj].map(m => renderLibItem(m)).join('')}
+                    </div>
+                 `).join('');
+                } else {
+                    list.innerHTML = res.materials.map(m => renderLibItem(m)).join('');
+                }
+                if (res.materials.length === 0) list.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">No items</p>';
+
+            } catch (e) { list.innerHTML = 'Error'; }
+        }
+
+        function renderLibItem(m) {
+            return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border);">
+            <div>
+                <div style="font-weight:500;">${m.title}</div>
+                <div style="font-size:12px; color:var(--text-muted);">${m.type} • ${m.views} views</div>
+            </div>
+            <button class="btn btn-sm btn-danger" onclick="deleteLib(${m.id})"><i class="bi bi-trash"></i></button>
+        </div>`;
+        }
+
+        async function submitLibrary() {
+            const title = document.getElementById('lib-title').value;
+            const fileInput = document.getElementById('lib-file');
+            let urlVal = document.getElementById('lib-url').value;
+
+            if (!title) return toast('Title required', 'error');
+
+            try {
+                if (fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+
+                    // Do not use api() helper because it sets Content-Type json
+                    // Use fetch directly + Auth headers
+                    const headers = {
+                        'X-Telegram-Init-Data': tg.initData || '',
+                        'ngrok-skip-browser-warning': 'true'
+                    };
+
+                    toast('Uploading...');
+                    const up = await fetch(`${apiBase}/api/admin/upload`, { method: 'POST', headers, body: formData });
+                    const upData = await up.json();
+                    if (upData.status !== 'success') throw 'Upload Failed';
+                    urlVal = upData.url;
+                }
+
+                if (!urlVal) throw 'URL or File required';
+
+                await api('/library/add', 'POST', {
+                    title, url: urlVal,
+                    subject: document.getElementById('lib-subject').value,
+                    material_type: document.getElementById('lib-type').value,
+                    level: 'Universal'
+                });
+
+                toast('Added successfully');
+                closeModal('modal-add-lib');
+                loadLibrary('all');
+
+            } catch (e) { toast(e, 'error'); }
+        }
+
+        async function deleteLib(id) {
+            if (!confirm('Delete?')) return;
+            await api('/library/delete', 'POST', { id });
+            loadLibrary('all');
+        }
+
+        // --- CHANNELS & ADMINS ---
+        async function loadChannels() {
+            const cList = document.getElementById('channels-list');
+            const aList = document.getElementById('admins-list');
+
+            const cData = await api('/channels/list');
+            cList.innerHTML = cData.channels.map(c => `
+            <div class="flex-row" style="align-items:center; border-bottom:1px solid var(--border); padding:10px 0;">
+                <div style="flex:1"><b>${c.title}</b><br><small>${c.url}</small></div>
+                <button class="btn btn-sm btn-danger" onclick="deleteChannel(${c.id})">Delete</button>
+            </div>
+        `).join('') || '<p>No channels</p>';
+
+            const aData = await api('/admins/list');
+            aList.innerHTML = aData.admins.map(a => `
+            <div class="flex-row" style="align-items:center; border-bottom:1px solid var(--border); padding:10px 0;">
+                <div style="flex:1"><b>${a.name}</b><br><small>ID: ${a.user_id}</small></div>
+                <button class="btn btn-sm btn-danger" onclick="removeAdmin(${a.user_id})">Remove</button>
+            </div>
+        `).join('') || '<p>No extra admins</p>';
+        }
+
+        async function addChannel() {
+            const title = document.getElementById('ch-title').value;
+            const url = document.getElementById('ch-url').value;
+            if (!title || !url) return;
+            await api('/channels/add', 'POST', { title, url });
+            closeModal('modal-add-channel');
+            loadChannels();
+        }
+        async function deleteChannel(id) {
+            await api('/channels/delete', 'POST', { id });
+            loadChannels();
+        }
+        async function addAdmin() {
+            const user_id = document.getElementById('adm-id').value;
+            const name = document.getElementById('adm-name').value;
+            await api('/admins/add', 'POST', { user_id, name });
+            closeModal('modal-add-admin');
+            loadChannels();
+        }
+        async function removeAdmin(user_id) {
+            await api('/admins/delete', 'POST', { user_id });
+            loadChannels();
+        }
+
+        // --- BROADCAST ---
+        async function startBroadcast() {
+            const text = document.getElementById('broadcast-text').value;
+            const pin = document.getElementById('bc-pin').checked;
+            if (!text) return toast('Text empty', 'error');
+
+            await api('/broadcast', 'POST', { text, pin });
+            toast('Started');
+            document.getElementById('bc-status-card').classList.remove('hidden');
+            pollBroadcast();
+        }
+
+        function pollBroadcast() {
+            const i = setInterval(async () => {
+                const s = await api('/broadcast/status');
+                document.getElementById('bc-msg').innerText = s.message;
+                if (s.total > 0) document.getElementById('bc-progress').style.width = (s.sent / s.total * 100) + '%';
+                document.getElementById('bc-sent').innerText = 'Sent: ' + s.sent;
+                document.getElementById('bc-total').innerText = 'Total: ' + s.total;
+                if (!s.active) clearInterval(i);
+            }, 1000);
+        }
+
+        // --- SETTINGS ---
+        async function loadSettings() {
+            const s = await api('/settings');
+            if (s.settings) {
+                document.getElementById('set-ai-provider').value = s.settings.ai_provider;
+                document.getElementById('set-limit').value = s.settings.daily_limit;
+                document.getElementById('set-maint').value = s.settings.maintenance;
+            }
+        }
+        async function saveSetting(key, value) {
+            await api('/settings', 'POST', { key, value });
+            toast('Saved');
+        }
+
+        // --- UTILS ---
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        function debounceSearch(val) {
+            // Simple placeholder for real debounce
+            loadUsers();
+        }
+
+        // Load initial
+        loadStats();
+    </script>
+</body>
+
+</html>
+
+
+
+function switchTab(tab, el) {
+document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+document.getElementById('tab-' + tab).classList.add('active');
+if (el) el.classList.add('active');
+
+if (tab === 'overview') loadOverview();
+if (tab === 'users') loadUsers();
+if (tab === 'payments') loadPayments();
+if (tab === 'library') loadLibrary('all');
+if (tab === 'control') { loadSettings(); loadSystemInfo(); }
+}
+
+// --- OVERVIEW ---
+async function loadOverview() {
+try {
+const res = await authenticatedFetch(`${apiBase}/api/admin/stats/overview`);
+const data = await res.json();
+
+document.getElementById('stat-total').textContent = data.total_users;
+document.getElementById('stat-premium').textContent = data.premium_users;
+document.getElementById('stat-new').textContent = data.new_today;
+
+// Load Quick Stats
+const res2 = await authenticatedFetch(`${apiBase}/api/admin/stats/features`);
+const stats = await res2.json();
+if (stats.status === 'success') {
+let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">';
+    for (const [key, val] of Object.entries(stats.data)) {
+    html += `<div><strong>${key}:</strong> ${val}</div>`;
+    }
+    html += '</div>';
+document.getElementById('quick-stats').innerHTML = html;
+}
+} catch (e) { console.log(e); }
+}
+
+// --- USERS ---
+async function loadUsers(search = '') {
+showLoading(true);
+try {
+const res = await authenticatedFetch(`${apiBase}/api/admin/users?search=${search}`);
+const data = await res.json();
+allUsers = data.users || [];
+
+const html = allUsers.map(u => `
+<div class="list-item" onclick="openUserModal(${u.id}, '${u.name || 'User'}', '${u.username || ''}')">
+    <div class="item-meta">
+        <h4>${u.name || 'Unknown'}</h4>
+        <p>${u.username ? '@' + u.username : 'No username'} • ${u.joined?.split('T')[0]}</p>
+    </div>
+    <div>
+        ${u.premium ? '<span class="badge prem">PRO</span>' : ''}
+    </div>
+</div>
+`).join('');
+document.getElementById('users-list').innerHTML = html || '<div class="empty-state">No users</div>';
+} catch (e) {
+document.getElementById('users-list').innerHTML = '<div class="empty-state">Error loading users</div>';
+}
+showLoading(false);
+}
+
+function openUserModal(id, name, username) {
+selectedUser = id;
+document.getElementById('modal-username').textContent = name;
+document.getElementById('modal-userid').textContent = `ID: ${id}`;
+document.getElementById('user-modal').classList.add('show');
+}
+
+async function doUserAction(action) {
+showLoading(true);
+try {
+const res = await authenticatedFetch(`${apiBase}/api/admin/quick-action`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ user_id: selectedUser, action: action })
+});
+const d = await res.json();
+if (d.status === 'success') {
+showToast('Action successful');
+closeModal('user-modal');
+loadUsers();
+} else {
+showToast(d.message, 'error');
+}
+} catch (e) { showToast('Error', 'error'); }
+showLoading(false);
+}
+
+let searchDebounce;
+function debounceSearch(val) {
+clearTimeout(searchDebounce);
+searchDebounce = setTimeout(() => loadUsers(val), 500);
+}
+
+// --- PAYMENTS ---
+async function loadPayments() {
+showLoading(true);
+try {
+const res = await authenticatedFetch(`${apiBase}/api/admin/payments/history`);
+const data = await res.json();
+
+document.getElementById('pay-pending').textContent = data.total_pending;
+document.getElementById('pay-today').textContent = data.total_approved; // Just using approved count for now
+
+const html = data.history.map(p => `
+<div class="list-item" onclick="openPaymentModal(${p.id}, '${p.user}', ${p.amount}, '${p.status}', '${p.proof}')">
+    <div class="item-meta">
+        <h4>${p.user}</h4>
+        <p>${p.amount} UZS • ${p.date.split('T')[0]}</p>
+    </div>
+    <span class="badge ${p.status}">${p.status.toUpperCase()}</span>
+</div>
+`).join('');
+document.getElementById('payments-list').innerHTML = html || '<div class="empty-state">No payments</div>';
+} catch (e) {
+document.getElementById('payments-list').innerHTML = '<div class="empty-state">Error loading payments</div>';
+}
+showLoading(false);
+}
+
+function openPaymentModal(id, user, amount, status, proof) {
+selectedPayment = id;
+document.getElementById('pay-modal-info').textContent = `${user} sent ${amount} UZS`;
+document.getElementById('pay-proof-id').textContent = proof;
+document.getElementById('payment-modal').classList.add('show');
+
+// Disable buttons if already processed
+const btns = document.querySelectorAll('#payment-modal button');
+btns.forEach(b => b.disabled = (status !== 'pending'));
+}
+
+async function doPaymentAction(action) {
+showLoading(true);
+try {
+const res = await authenticatedFetch(`${apiBase}/api/admin/payment/action`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ payment_id: selectedPayment, action: action })
+});
+const d = await res.json();
+if (d.status === 'success') {
+showToast(`Payment ${action}`);
+closeModal('payment-modal');
+loadPayments();
+}
+} catch (e) { showToast('Error processing payment', 'error'); }
+showLoading(false);
+}
+
+// --- LIBRARY ---
+async function loadLibrary(subject) {
+showLoading(true);
+try {
+let url = `${apiBase}/api/admin/library/list`;
+if (subject && subject !== 'all') url += `?subject=${subject}`;
+
+const res = await authenticatedFetch(url);
+const data = await res.json();
+
+let html = '';
+
+if (data.materials.length === 0) {
+html = '<div class="empty-state">No items</div>';
+} else if (!subject || subject === 'all') {
+// Group by subject
+const grouped = {};
+data.materials.forEach(m => {
+if (!grouped[m.subject]) grouped[m.subject] = [];
+grouped[m.subject].push(m);
+});
+
+for (const [subj, items] of Object.entries(grouped)) {
+html += `
+<div style="margin-bottom: 16px;">
+    <h3 style="padding: 8px 0; border-bottom: 1px solid var(--border); color: var(--accent);">${subj}</h3>
+    ${items.map(m => `
+    <div class="list-item">
+        <div class="item-meta">
+            <h4>${m.title}</h4>
+            <p>${m.type} • ${m.views} views • ${m.date.split('T')[0]}</p>
+        </div>
+        <button class="btn-icon" style="color:red;" onclick="deleteLibItem(${m.id})"><i
+                class="bi bi-trash"></i></button>
+    </div>
+    `).join('')}
+</div>
+`;
+}
+} else {
+// Single subject list
+html = data.materials.map(m => `
+<div class="list-item">
+    <div class="item-meta">
+        <h4>${m.title}</h4>
+        <p>${m.subject} • ${m.type} • ${m.views} views</p>
+    </div>
+    <button class="btn-icon" style="color:red;" onclick="deleteLibItem(${m.id})"><i class="bi bi-trash"></i></button>
+</div>
+`).join('');
+}
+
+document.getElementById('library-list').innerHTML = html;
+} catch (e) {
+document.getElementById('library-list').innerHTML = '<div class="empty-state">Error loading items</div>';
+}
+showLoading(false);
+}
+
+function openLibraryModal() {
+document.getElementById('library-modal').classList.add('show');
+}
+
+async function submitLibraryItem() {
+const title = document.getElementById('lib-title').value;
+const subject = document.getElementById('lib-subject').value;
+const type = document.getElementById('lib-type').value;
+let urlVal = document.getElementById('lib-url').value;
+const fileInput = document.getElementById('lib-file');
+
+if (!title) return showToast('Enter title', 'error');
+
+showLoading(true);
+try {
+// Upload file if selected
+if (fileInput && fileInput.files.length > 0) {
+const formData = new FormData();
+formData.append('file', fileInput.files[0]);
+
+const headers = {};
+headers['X-Telegram-Init-Data'] = tg.initData || '';
+headers['ngrok-skip-browser-warning'] = 'true';
+
+const uploadRes = await fetch(`${apiBase}/api/admin/upload`, {
+method: 'POST',
+headers: headers,
+body: formData
+});
+
+const uploadData = await uploadRes.json();
+if (uploadData.status === 'success') {
+urlVal = uploadData.url;
+showToast('File uploaded!');
+} else {
+throw new Error(uploadData.message || 'Upload failed');
+}
+}
+
+if (!urlVal) throw new Error('No URL or File provided');
+
+const res = await authenticatedFetch(`${apiBase}/api/admin/library/add`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+title: title,
+subject: subject,
+material_type: type,
+url: urlVal,
+level: 'Universal'
+})
+});
+const d = await res.json();
+if (d.status === 'success') {
+showToast('Added successfully');
+closeModal('library-modal');
+loadLibrary('all');
+document.getElementById('lib-title').value = '';
+document.getElementById('lib-url').value = '';
+if (fileInput) fileInput.value = '';
+} else {
+showToast('Failed to add: ' + d.message, 'error');
+}
+} catch (e) { showToast(e.message || 'Error', 'error'); }
+showLoading(false);
+}
+
+async function deleteLibItem(id) {
+if (!confirm('Delete this item?')) return;
+try {
+const res = await authenticatedFetch(`${apiBase}/api/admin/library/delete`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ id: id })
+});
+loadLibrary('all');
+} catch (e) { showToast('Error deleting', 'error'); }
+}
+
+// --- BROADCAST ---
+async function startBroadcast() {
+const text = document.getElementById('broadcast-text').value;
+const pin = document.getElementById('toggle-pin').classList.contains('active');
+
+if (!text) return showToast('Enter message text', 'error');
+
+try {
+const res = await authenticatedFetch(`${apiBase}/api/admin/broadcast`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ text: text, pin: pin })
+});
+const d = await res.json();
+if (d.status === 'started') {
+showToast('Broadcast started');
+document.getElementById('broadcast-status-card').style.display = 'block';
+pollBroadcast();
+} else {
+showToast(d.message, 'error');
+}
+} catch (e) { showToast('Error starting', 'error'); }
+}
+
+function pollBroadcast() {
+if (broadcastInterval) clearInterval(broadcastInterval);
+broadcastInterval = setInterval(async () => {
+const res = await authenticatedFetch(`${apiBase}/api/admin/broadcast/status`);
+const s = await res.json();
+
+document.getElementById('broadcast-msg').textContent = s.message;
+const pct = s.total > 0 ? (s.sent / s.total) * 100 : 0;
+document.getElementById('broadcast-progress').style.width = pct + '%';
+document.getElementById('broadcast-sent').textContent = `Sent: ${s.sent}`;
+document.getElementById('broadcast-total').textContent = `Total: ${s.total}`;
+
+if (!s.active) {
+clearInterval(broadcastInterval);
+showToast('Broadcast finished');
+}
+}, 1000);
+}
+
+async function stopBroadcast() {
+await authenticatedFetch(`${apiBase}/api/admin/broadcast/stop`, { method: 'POST' });
+showToast('Stopping...');
+}
+
+// --- CONTROL ---
+async function loadSettings() {
+const res = await authenticatedFetch(`${apiBase}/api/admin/settings`);
+const d = await res.json();
+if (d.settings) {
+document.getElementById('setting-provider').value = d.settings.ai_provider;
+if (d.settings.maintenance === 'true') document.getElementById('toggle-maint').classList.add('active');
+}
+}
+
+async function saveSetting(key, val) {
+await authenticatedFetch(`${apiBase}/api/admin/settings`, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ key: key, value: val })
+});
+showToast('Saved');
+}
+
+async function toggleSetting(key) {
+const el = document.getElementById('toggle-maint');
+const isActive = el.classList.contains('active');
+el.classList.toggle('active');
+saveSetting(key, isActive ? 'false' : 'true');
+}
+
+async function loadSystemInfo() {
+const res = await authenticatedFetch(`${apiBase}/api/admin/system/status`);
+const d = await res.json();
+document.getElementById('system-info').innerHTML = `
+CPU: ${d.cpu_percent}% | RAM: ${d.memory_percent}% <br>
+Uptime: ${d.uptime_formatted}
+`;
+}
+
+// Init
+tg.ready();
+loadOverview();
+</script>
+</body>
+
+</html>

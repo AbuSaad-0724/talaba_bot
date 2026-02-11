@@ -10,9 +10,10 @@ from database import (
     get_pending_payments, update_payment_status, set_premium, add_book, 
     get_all_users, add_channel, get_all_channels, delete_channel, 
     get_detailed_stats, get_all_tg_ids, add_template, get_all_templates, 
-    delete_template, set_setting, get_now, revoke_premium, get_function_stats
+    delete_template, set_setting, get_now, revoke_premium, get_function_stats,
+    add_deadline, get_user
 )
-from config import ADMIN_ID
+from config import ADMIN_ID, SERVER_URL
 
 router = Router()
 
@@ -38,16 +39,47 @@ class AdminStates(StatesGroup):
 class PaymentStates(StatesGroup):
     waiting_for_proof = State()
 
+@router.message(StateFilter("*"), Command("admin"))
 @router.message(StateFilter("*"), F.text == "🔑 Boshqaruv Paneli")
+@router.message(StateFilter("*"), F.text == "🔑 Админ панель")
+@router.message(StateFilter("*"), F.text == "🔑 Admin Panel")
 async def admin_dashboard(message: types.Message):
-    if message.from_user.id != ADMIN_ID: return
+    print(f"DEBUG: Admin Panel command received from {message.from_user.id}")
+    from database import is_user_admin
+    if not is_user_admin(message.from_user.id):
+        print(f"DEBUG: Access denied for {message.from_user.id}")
+        await message.answer("⚠️ **Kirish taqiqlangan!**\nSizda admin huquqlari yo'q.", parse_mode="Markdown")
+        return
     
+    print(f"DEBUG: Access granted for {message.from_user.id}")
     text = (
         "🔑 **Boshqaruv Paneli**\n\n"
         "Botni boshqarish uchun kerakli bo'limni tanlang:"
     )
     
     builder = InlineKeyboardBuilder()
+    
+    # Web Admin Button
+    from aiogram.types import WebAppInfo
+    from config import WEBAPP_URL
+    
+    # Construct Admin URL with params
+    # from database import get_user_language # Already imported at top
+    # from config import SERVER_URL # Already imported at top
+    import urllib.parse
+    
+    from database import get_user_language
+    lang = get_user_language(message.from_user.id) or 'uz'
+    server_p = f"&server={urllib.parse.quote(SERVER_URL)}" if SERVER_URL else ""
+    
+    admin_url = WEBAPP_URL.replace("index.html", "admin_dashboard.html") if "index.html" in WEBAPP_URL else f"{WEBAPP_URL}admin_dashboard.html"
+    if not admin_url.endswith("admin_dashboard.html"):
+        admin_url = admin_url.rstrip("/") + "/admin_dashboard.html"
+    
+    admin_url += f"?lang={lang}{server_p}"
+
+    builder.button(text="🌐 Web Admin Panel", web_app=WebAppInfo(url=admin_url))
+    
     builder.button(text="📊 Statistika", callback_data="admin_stats_view")
     builder.button(text="📢 Xabar yuborish", callback_data="admin_broadcast_view")
     builder.button(text="💳 To'lovlar", callback_data="admin_payments_view")
@@ -58,7 +90,12 @@ async def admin_dashboard(message: types.Message):
     builder.button(text="🎨 Shablonlar", callback_data="admin_template_view")
     builder.button(text="🖼 QR Kodlar", callback_data="admin_qr_view")
     builder.button(text="⚙️ Sozlamalar", callback_data="admin_settings_view")
-    builder.adjust(2)
+    
+    # Only Super Admin (Config ID) can manage other admins? Or allow all admins?
+    # Let's allow all admins to see list, but maybe restriction for adding?
+    # For now, allow all.
+    builder.button(text="🔑 Adminlar", callback_data="admin_manage_admins")
+    builder.adjust(1, 2)
     
     await message.answer(text, reply_markup=builder.as_markup(), parse_mode="Markdown")
 
@@ -198,7 +235,7 @@ async def admin_users_list(event: types.Message | types.CallbackQuery):
                         expiry = f" ({diff.days} d)" if diff.days > 0 else " (today)"
                     else:
                         status = "⌛"
-                except:
+                except Exception:
                     status = "❓"
 
             name = html.quote(full_name) if full_name else f"User {tg_id}"
@@ -265,7 +302,6 @@ async def premium_info(message: types.Message, state: FSMContext):
         parse_mode="Markdown"
     )
     await state.set_state(PaymentStates.waiting_for_proof)
-    await state.set_state(PaymentStates.waiting_for_proof)
 
 @router.message(PaymentStates.waiting_for_proof, F.text == "❌ Bekor qilish")
 async def cancel_payment(message: types.Message, state: FSMContext):
@@ -277,36 +313,93 @@ async def cancel_payment(message: types.Message, state: FSMContext):
 async def handle_payment_proof(message: types.Message, state: FSMContext):
     from database import add_payment
     from config import PREMIUM_PRICE, HUMO_CARD
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    # Get state data
+    data = await state.get_data()
+    months = data.get('months', 1)
+    amount_text = data.get('amount', '25 000')
     
     file_id = None
+    file_type = None
     if message.photo:
         file_id = message.photo[-1].file_id
+        file_type = "photo"
     elif message.document:
         file_id = message.document.file_id
+        file_type = "document"
     
     if file_id:
-        add_payment(message.from_user.id, PREMIUM_PRICE, HUMO_CARD, file_id)
-        
-        # Notify Admin
-        user_name = html.quote(message.from_user.full_name)
-        user_link = f'<a href="tg://user?id={message.from_user.id}">{user_name}</a>'
-        
-        admin_text = (
-            f"🚀 <b>Yangi to'lov isboti!</b>\n\n"
-            f"👤 <b>Foydalanuvchi:</b> {user_link}\n"
-            f"🆔 <b>ID:</b> <code>{message.from_user.id}</code>\n"
-            f"💰 <b>Summa:</b> {PREMIUM_PRICE} so'm\n\n"
-            f"Tasdiqlash uchun: <b>Boshqaruv Paneli -> To'lovlar</b> bo'limiga o'ting."
-        )
-        
         try:
-            await message.bot.send_message(ADMIN_ID, admin_text, parse_mode="HTML")
-        except Exception as e:
-            import logging
-            logging.error(f"Failed to notify admin about payment: {e}")
+            # Save payment to database
+            add_payment(message.from_user.id, PREMIUM_PRICE, HUMO_CARD, file_id)
+            logger.info(f"Payment proof received from user {message.from_user.id}")
+            
+            # Notify Admin
+            user_name = html.quote(message.from_user.full_name)
+            user_username = f"@{message.from_user.username}" if message.from_user.username else "Username yo'q"
+            user_link = f'<a href="tg://user?id={message.from_user.id}">{user_name}</a>'
+            
+            admin_text = (
+                f"🚀 <b>Yangi to'lov isboti!</b>\n\n"
+                f"👤 <b>Foydalanuvchi:</b> {user_link}\n"
+                f"🆔 <b>ID:</b> <code>{message.from_user.id}</code>\n"
+                f"👨‍💼 <b>Username:</b> {user_username}\n"
+                f"💰 <b>Summa:</b> {amount_text} so'm\n"
+                f"📅 <b>Muddat:</b> {months} oy\n"
+                f"📎 <b>Fayl turi:</b> {file_type}\n\n"
+                f"Tasdiqlash uchun: <b>/payments</b> buyrug'ini yuboring yoki "
+                f"<b>Boshqaruv Paneli → To'lovlar</b> bo'limiga o'ting."
+            )
+            
+            try:
+                # Send text message first
+                await message.bot.send_message(ADMIN_ID, admin_text, parse_mode="HTML")
+                
+                # Forward the payment proof
+                if file_type == "photo":
+                    await message.bot.send_photo(
+                        ADMIN_ID, 
+                        file_id,
+                        caption=f"To'lov isboti - {user_name} (ID: {message.from_user.id})"
+                    )
+                else:
+                    await message.bot.send_document(
+                        ADMIN_ID,
+                        file_id,
+                        caption=f"To'lov isboti - {user_name} (ID: {message.from_user.id})"
+                    )
+                
+                logger.info(f"Admin notified about payment from user {message.from_user.id}")
+                
+            except Exception as e:
+                logger.error(f"Failed to notify admin about payment: {e}")
+                # Still continue to notify user even if admin notification fails
 
-        await message.answer("✅ **To'lov isboti qabul qilindi!**\n\nAdmin tez orada tekshirib, Premium statusini faollashtiradi. Sabringiz uchun rahmat!", parse_mode="Markdown")
-        await state.clear()
+            # Notify user
+            await message.answer(
+                "✅ **To'lov isboti qabul qilindi!**\n\n"
+                "Admin tez orada tekshirib, Premium statusini faollashtiradi.\n"
+                "Sabringiz uchun rahmat! 🙏\n\n"
+                "📊 Holat: Tekshiruvda...",
+                parse_mode="Markdown"
+            )
+            await state.clear()
+            
+        except Exception as e:
+            logger.error(f"Error processing payment proof: {e}")
+            await message.answer(
+                "❌ Xatolik yuz berdi. Iltimos, qaytadan urinib ko'ring yoki "
+                "admin bilan bog'laning: @Abusaadl7",
+                parse_mode="Markdown"
+            )
+    else:
+        await message.answer(
+            "❌ Fayl topilmadi. Iltimos, rasm yoki hujjat yuboring.",
+            parse_mode="Markdown"
+        )
 
 # Book Management
 @router.message(StateFilter("*"), Command("addbook"), F.chat.id == ADMIN_ID)
@@ -864,3 +957,243 @@ async def set_gemini_handler(message: types.Message, state: FSMContext):
     set_setting("gemini_api_key", message.text.strip())
     await message.answer("✅ Gemini API Key o'zgartirildi!")
     await state.clear()
+
+import json
+import asyncio
+
+@router.message(F.web_app_data)
+async def handle_webapp_data(message: types.Message, state: FSMContext):
+    try:
+        data = json.loads(message.web_app_data.data)
+        action = data.get('action')
+        user_id = message.from_user.id
+        from config import ADMIN_ID
+        is_admin = (user_id == ADMIN_ID or user_id == 7949819462)
+
+        # 1. ADMIN ACTIONS
+        if action.startswith("admin_") or action in ["get_channels", "get_db"]:
+            if not is_admin:
+                return # Silent ignore for non-admins
+            
+            # BROADCAST
+            if action == "admin_broadcast":
+                text = data.get('text')
+                if text:
+                    progress_msg = await message.answer(f"📢 Xabar tarqatilmoqda...\nMatn: {text[:50]}...")
+                    users = get_all_tg_ids()
+                    count = 0
+                    blocked = 0
+                    for uid in users:
+                        try:
+                            await message.bot.send_message(uid, f"🔔 **ADMIN XABARI:**\n\n{text}", parse_mode="Markdown")
+                            count += 1
+                            await asyncio.sleep(0.05) 
+                        except:
+                            blocked += 1
+                    await progress_msg.edit_text(f"✅ Xabar yuborildi!\n\nYetib bordi: {count}\nBloklaganlar: {blocked}")
+
+            # GIVE PREMIUM
+            elif action == "admin_premium":
+                try:
+                    target_id = int(data.get('target_id'))
+                    days = int(data.get('days', 30))
+                    
+                    user_name = "User"
+                    try: 
+                        usr = get_user(target_id)
+                        if usr: user_name = usr[1]
+                    except: pass
+
+                    if set_premium(target_id, days):
+                        try:
+                            await message.bot.send_message(target_id, f"🎉 **Tabriklaymiz!**\n\nSizga Admin tomonidan **{days} kunlik Premium** sovg'a qilindi! 💎")
+                            await message.answer(f"✅ {user_name} ({target_id}) ga {days} kun Premium berildi.")
+                        except:
+                            await message.answer(f"✅ {target_id} ga Premium berildi (lekin unga xabar bormadi).")
+                    else:
+                        await message.answer("❌ Xatolik.")
+                except ValueError:
+                    await message.answer("❌ ID raqam bo'lishi kerak.")
+
+            # BONUS ALL
+            elif action == "admin_bonus_all":
+                 days = int(data.get('days', 5))
+                 from database import add_premium_to_all
+                 count = add_premium_to_all(days)
+                 await message.answer(f"✅ Muvaffaqiyatli! {count} ta foydalanuvchiga {days} kunlik Bonus berildi! 🎉")
+
+            # CHANNELS
+            elif action == "get_channels":
+                 from.common import cmd_channels # Lazy import to avoid cycle
+                 await cmd_channels(message, state) 
+            
+            # DB BACKUP
+            elif action == "get_db":
+                 from aiogram.types import FSInputFile
+                 from config import DB_PATH
+                 await message.answer_document(FSInputFile(DB_PATH), caption="📂 Database Backup")
+
+        # 2. USER ACTIONS (Available to everyone)
+        elif action == "add_deadline":
+            title = data.get('title')
+            date_str = data.get('date')
+            if title and date_str:
+                # Default to 09:00
+                due = datetime.datetime.strptime(date_str, "%Y-%m-%d").replace(hour=9, minute=0)
+                add_deadline(user_id, title, due.isoformat())
+                await message.answer(f"✅ <b>Deadline Qabul Qilindi!</b>\n\n📌 <i>{title}</i>\n📅 {date_str}\n\nEslatmani vaqtida yuboraman!", parse_mode="HTML")
+
+    except Exception as e:
+        await message.answer(f"⚠️ WebApp Action Error: {e}")
+async def handle_admin_webapp_data(message: types.Message):
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    try:
+        data = json.loads(message.web_app_data.data)
+        action = data.get('action')
+        
+        if action == 'admin_bonus_all':
+            days = int(data.get('days', 5))
+            from database import add_premium_to_all
+            count = add_premium_to_all(days)
+            await message.answer(f"✅ <b>Muvaffaqiyatli!</b>\n\n{count} ta foydalanuvchiga +{days} kunlik Premium Bonus berildi! 🎉", parse_mode='HTML')
+            
+    except Exception as e:
+        await message.answer(f"❌ Xatolik yuz berdi: {e}")
+
+
+@router.message(F.reply_to_message)
+async def handle_admin_reply(message: types.Message):
+    from database import is_user_admin
+    if not is_user_admin(message.from_user.id): return
+    
+    reply = message.reply_to_message
+    # Check if it's a support message (Markdown format might be parsed or raw text)
+    # The bot sends: "📨 **Web App Support:**"
+    # reply.text usually contains the formatted text if bot sent it.
+    if not reply.text or "Web App Support" not in reply.text:
+        return
+        
+    # Extract user ID
+    try:
+        user_id = 0
+        lines = reply.text.split('\n')
+        for line in lines:
+            if "(ID: " in line:
+                part = line.split("(ID: ")[1]
+                user_id = int(part.split(")")[0])
+                break
+        
+        if user_id == 0:
+            return
+            
+        # Save admin reply to DB
+        from database import add_support_message
+        add_support_message(user_id, 'admin', message.text)
+        
+        # Notify user (via bot)
+        await message.bot.send_message(user_id, f"💬 **Support Javobi:**\n\n{message.text}", parse_mode="Markdown")
+        await message.answer("✅ Javob yuborildi!")
+        
+    except Exception as e:
+        await message.answer(f"❌ Xatolik: {e}")
+
+# ==========================================
+# ADMIN MANAGEMENT HANDLERS
+# ==========================================
+
+@router.callback_query(F.data == "admin_manage_admins")
+async def admin_manage_list(callback: types.CallbackQuery):
+    from database import get_all_admins, is_user_admin, remove_admin
+    
+    # Security check
+    if not is_user_admin(callback.from_user.id):
+        return await callback.answer("Huquqingiz yo'q!", show_alert=True)
+        
+    admins = get_all_admins()
+    
+    text = "🔑 **Adminlar Ro'yxati:**\n\n"
+    for uid, name, date in admins:
+        text += f"👤 {name} (ID: `{uid}`)\n📅 {date}\n\n"
+        
+    text += "Yangi admin qo'shish uchun ID raqamni yuboring (yoki ularning xabarini Forward qiling)."
+    
+    kb = InlineKeyboardBuilder()
+    kb.button(text="➕ Admin qo'shish", callback_data="admin_add_new")
+    
+    # List admins for removal
+    for uid, name, _ in admins:
+         # Don't allow removing self or Super Admin (hardcoded check logic needed)
+         if uid != callback.from_user.id: 
+             kb.button(text=f"🗑 O'chirish: {name}", callback_data=f"admin_rem_{uid}")
+             
+    kb.button(text="🔙 Orqaga", callback_data="admin_back")
+    kb.adjust(1)
+    
+    await callback.message.edit_text(text, reply_markup=kb.as_markup(), parse_mode="Markdown")
+
+@router.callback_query(F.data == "admin_add_new")
+async def admin_add_start(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.answer("Yangi adminning Telegram ID sini yuboring:\n(Yoki foydalanuvchining xabarini shu yerga Forward qiling)")
+    await state.set_state(AdminStates.waiting_for_admin_contact) # Reusing state or creating new?
+    # AdminStates.waiting_for_admin_contact is defined?
+    # Let's use a new state or existing one. Step 1553 shows waiting_for_admin_contact exists.
+    await callback.answer()
+
+@router.message(AdminStates.waiting_for_admin_contact)
+async def admin_add_finish(message: types.Message, state: FSMContext):
+    from database import add_admin
+    
+    try:
+        if message.forward_from:
+            new_admin_id = message.forward_from.id
+            name = message.forward_from.full_name
+        else:
+            # Try parsing integer from text if available
+            text = message.text or message.caption
+            if not text:
+                return await message.answer("❌ Iltimos, ID raqam yuboring yoki xabarni forward qiling.")
+            
+            new_admin_id = int(text.strip())
+            # Try to get info
+            try:
+                chat = await message.bot.get_chat(new_admin_id)
+                name = chat.full_name
+            except:
+                name = f"Admin {new_admin_id}"
+                
+        add_admin(new_admin_id, message.from_user.id, name)
+        await message.answer(f"✅ Yangi admin qo'shildi:\n{name} (`{new_admin_id}`)", parse_mode="Markdown")
+        
+        # Notify new admin
+        try:
+            from handlers.common import get_main_menu
+            await message.bot.send_message(
+                new_admin_id,
+                "🎉 **Tabriklaymiz!**\n\nSizga **Admin** huquqi berildi. ✅\n"
+                "Endi siz botni boshqarishingiz mumkin.\n\n"
+                "Quyidagi tugma orqali boshqaruv paneliga kiring:",
+                reply_markup=get_main_menu(new_admin_id),
+                parse_mode="Markdown"
+            )
+        except Exception as e:
+            await message.answer(f"⚠️ Admin qo'shildi, lekin unga xabar yuborib bo'lmadi (Botni start qilmagan bo'lishi mumkin).\n\nXato: {e}")
+            
+        await state.clear()
+    except ValueError:
+        await message.answer("❌ Iltimos, to'g'ri ID raqam yuboring yoki xabarni forward qiling.")
+    except Exception as e:
+        await message.answer(f"❌ Xatolik: {e}")
+
+@router.callback_query(F.data.startswith("admin_rem_"))
+async def admin_remove_finish(callback: types.CallbackQuery):
+    from database import remove_admin, is_user_admin
+    
+    if not is_user_admin(callback.from_user.id): return
+    
+    target_id = int(callback.data.replace("admin_rem_", ""))
+    remove_admin(target_id)
+    await callback.answer("Admin o'chirildi!", show_alert=True)
+    # Refresh list
+    await admin_manage_list(callback)

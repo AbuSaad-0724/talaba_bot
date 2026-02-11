@@ -3,8 +3,9 @@ from aiogram.filters import Command
 from database import get_referral_stats
 
 router = Router()
+from utils.texts import get_all_translations
 
-@router.message(F.text == "🗣 Do'stlarni taklif qilish")
+@router.message(F.text.in_(get_all_translations('btn_invite')))
 @router.message(Command("referral"))
 async def show_referral_info(message: types.Message):
     user_id = message.from_user.id

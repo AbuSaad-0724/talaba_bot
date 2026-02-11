@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0e1a">
+    <title>Darsliklar - Talaba AI</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #0f1420;
+            --glass-bg-strong: rgba(21, 27, 43, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-border-strong: rgba(255, 255, 255, 0.12);
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --blur-strong: blur(32px);
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --spacing-md: 12px;
+            --spacing-lg: 16px;
+            --spacing-xl: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding: var(--spacing-lg);
+            padding-bottom: 100px;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+            animation: float 30s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            33% {
+                transform: translate(30px, -30px) rotate(120deg);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) rotate(240deg);
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--glass-bg-strong);
+            border: 1.5px solid var(--glass-border-strong);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(139, 92, 246, 0.15);
+            border-color: var(--accent-purple);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: var(--glass-bg-strong);
+            border: 1.5px solid var(--glass-border-strong);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: var(--spacing-xl);
+            background: var(--glass-bg-strong);
+            padding: 4px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--glass-border);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            flex: 1;
+            min-width: fit-content;
+            padding: 10px 16px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-lg);
+        }
+
+        .subject-card {
+            background: var(--glass-bg-strong);
+            backdrop-filter: var(--blur-strong);
+            border: 1.5px solid var(--glass-border-strong);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .subject-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .subject-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .subject-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: var(--shadow-md);
+            flex-shrink: 0;
+        }
+
+        .subject-info {
+            flex: 1;
+        }
+
+        .subject-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .subject-stats {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .subject-levels {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .level-badge {
+            padding: 4px 12px;
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-purple);
+        }
+
+        /* Subject Detail View */
+        .detail-view {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+            overflow-y: auto;
+            padding: var(--spacing-lg);
+        }
+
+        .detail-view.active {
+            display: block;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            padding: var(--spacing-lg);
+            background: var(--glass-bg-strong);
+            border: 1.5px solid var(--glass-border-strong);
+            border-radius: var(--radius-xl);
+        }
+
+        .detail-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .detail-info h2 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .detail-info p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .level-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .level-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: var(--spacing-lg);
+            padding-left: var(--spacing-md);
+            border-left: 4px solid var(--accent-purple);
+        }
+
+        .materials-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .material-card {
+            background: var(--glass-bg-strong);
+            border: 1.5px solid var(--glass-border-strong);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .material-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent-purple);
+            transform: translateX(4px);
+        }
+
+        .material-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .material-icon.video {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .material-icon.pdf {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-blue);
+        }
+
+        .material-icon.audio {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+        }
+
+        .material-info {
+            flex: 1;
+        }
+
+        .material-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .material-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        @media (min-width: 768px) {
+            .subjects-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <a href="index.html" class="back-btn">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h1>📚 Darsliklar</h1>
+        </div>
+
+        <!-- Search -->
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" class="search-input" id="searchInput" placeholder="Fan yoki mavzu qidiring...">
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="tabs">
+            <div class="tab active" data-category="all">Barchasi</div>
+            <div class="tab" data-category="exact">Aniq fanlar</div>
+            <div class="tab" data-category="languages">Tillar</div>
+            <div class="tab" data-category="humanities">Gumanitar</div>
+        </div>
+
+        <!-- Subjects Grid -->
+        <div class="subjects-grid" id="subjectsGrid">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Detail View -->
+    <div class="detail-view" id="detailView">
+        <div class="container">
+            <div class="header">
+                <button class="back-btn" onclick="closeDetail()">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+                <h1 id="detailTitle">Fan nomi</h1>
+            </div>
+
+            <div class="detail-header" id="detailHeader">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <div id="detailContent">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script src="library_data.js"></script>
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        // Render subjects
+        function renderSubjects(category = 'all') {
+            const grid = document.getElementById('subjectsGrid');
+            grid.innerHTML = '';
+
+            Object.keys(libraryData).forEach(key => {
+                const subject = libraryData[key];
+
+                if (category !== 'all' && subject.category !== category) {
+                    return;
+                }
+
+                const totalMaterials = Object.values(subject.levels).reduce((sum, level) => sum + level.materials.length, 0);
+                const videoCount = Object.values(subject.levels).reduce((sum, level) =>
+                    sum + level.materials.filter(m => m.type === 'video').length, 0);
+
+                const card = document.createElement('div');
+                card.className = 'subject-card';
+                card.onclick = () => openDetail(key);
+                card.innerHTML = `
+                    <div class="subject-header">
+                        <div class="subject-icon" style="background: ${subject.gradient};">
+                            ${subject.icon}
+                        </div>
+                        <div class="subject-info">
+                            <div class="subject-title">${subject.title}</div>
+                            <div class="subject-stats">${totalMaterials} darslik • ${videoCount} video</div>
+                        </div>
+                    </div>
+                    <div class="subject-levels">
+                        ${Object.values(subject.levels).map(level =>
+                    `<span class="level-badge">${level.name.split(' ')[0]}</span>`
+                ).join('')}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Open detail view
+        function openDetail(subjectKey) {
+            const subject = libraryData[subjectKey];
+            const detailView = document.getElementById('detailView');
+            const detailHeader = document.getElementById('detailHeader');
+            const detailContent = document.getElementById('detailContent');
+            const detailTitle = document.getElementById('detailTitle');
+
+            detailTitle.textContent = subject.title;
+
+            detailHeader.innerHTML = `
+                <div class="detail-icon" style="background: ${subject.gradient};">
+                    ${subject.icon}
+                </div>
+                <div class="detail-info">
+                    <h2>${subject.title}</h2>
+                    <p>${Object.keys(subject.levels).length} ta daraja • ${Object.values(subject.levels).reduce((sum, level) => sum + level.materials.length, 0)
+                } ta material</p>
+                </div>
+            `;
+
+            detailContent.innerHTML = '';
+            Object.entries(subject.levels).forEach(([key, level]) => {
+                const section = document.createElement('div');
+                section.className = 'level-section';
+                section.innerHTML = `
+                    <h3 class="level-title">${level.name}</h3>
+                    <div class="materials-list">
+                        ${level.materials.map(material => `
+                            <div class="material-card" onclick="openMaterial('${material.type}', '${material.title}')">
+                                <div class="material-icon ${material.type}">
+                                    ${material.type === 'video' ? '📹' : material.type === 'pdf' ? '📄' : '🎧'}
+                                </div>
+                                <div class="material-info">
+                                    <div class="material-title">${material.title}</div>
+                                    <div class="material-meta">
+                                        ${material.duration || material.pages ?
+                        (material.duration ? `⏱️ ${material.duration}` : `📄 ${material.pages} sahifa`)
+                        : ''}
+                                    </div>
+                                </div>
+                                <i class="bi bi-chevron-right" style="color: var(--text-muted);"></i>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                detailContent.appendChild(section);
+            });
+
+            detailView.classList.add('active');
+        }
+
+        // Close detail view
+        function closeDetail() {
+            document.getElementById('detailView').classList.remove('active');
+        }
+
+        // Open material
+        function openMaterial(type, title) {
+            tg.showAlert(`${title}\n\nBu material tez orada qo'shiladi!`);
+        }
+
+        // Category tabs
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function () {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                renderSubjects(this.dataset.category);
+            });
+        });
+
+        // Search
+        document.getElementById('searchInput').addEventListener('input', function (e) {
+            const query = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.subject-card');
+
+            cards.forEach(card => {
+                const title = card.querySelector('.subject-title').textContent.toLowerCase();
+                if (title.includes(query)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Initial render
+        renderSubjects();
+    </script>
+</body>
+
+</html>

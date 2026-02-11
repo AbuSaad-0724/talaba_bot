@@ -1,0 +1,2276 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Talaba Super App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bg-color: #0a0e27;
+            --bg-gradient: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-hover: rgba(255, 255, 255, 0.08);
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --nav-bg: rgba(10, 14, 39, 0.95);
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.2);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --blur: blur(20px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
+            animation: rotate 30s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .app-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px;
+            padding-bottom: 90px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .app-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .app-container::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* GLASSMORPHISM CARDS */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        }
+
+        .card:hover {
+            background: var(--card-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* BUTTONS */
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            object-fit: cover;
+        }
+
+        .book-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .book-card {
+            aspect-ratio: 2/3;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .book-cover {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .book-info {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 5px;
+            background: rgba(0, 0, 0, 0.8);
+            font-size: 10px;
+        }
+
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 75px;
+            background: rgba(22, 27, 34, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid rgba(88, 101, 242, 0.2);
+            box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            padding: 0 10px;
+        }
+
+        .nav-item {
+            position: relative;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 60px;
+        }
+
+        .nav-item i {
+            font-size: 22px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item:hover {
+            background: rgba(88, 101, 242, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .nav-item.active {
+            color: var(--accent-primary);
+            background: rgba(88, 101, 242, 0.15);
+        }
+
+        .nav-item.active i {
+            transform: scale(1.1);
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 0 0 3px 3px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                width: 0;
+                opacity: 0;
+            }
+
+            to {
+                width: 30px;
+                opacity: 1;
+            }
+        }
+
+        .nav-item-label {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 200;
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.open {
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .pdf-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 300;
+            display: none;
+            flex-direction: column;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- HOME -->
+        <div id="home-section" class="section active">
+            <!-- PREMIUM PROFILE CARD -->
+            <div class="card"
+                style="background: var(--accent-gradient); position: relative; overflow: hidden; padding: 0; border: none;">
+                <!-- Animated Background -->
+                <div
+                    style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: radial-gradient(circle at top right, rgba(255,255,255,0.15), transparent); opacity: 0.5;">
+                </div>
+
+                <!-- Profile Content -->
+                <div style="position: relative; padding: 25px;">
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+                        <!-- Avatar with Ring -->
+                        <div style="position: relative;">
+                            <div
+                                style="position: absolute; inset: -3px; background: linear-gradient(45deg, rgba(255,255,255,0.5), rgba(255,255,255,0.1)); border-radius: 50%; animation: pulse 2s infinite;">
+                            </div>
+                            <img id="displayAvatar"
+                                style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; position: relative; border: 3px solid rgba(255,255,255,0.3);"
+                                src="">
+                            <div
+                                style="position: absolute; bottom: 0; right: 0; width: 24px; height: 24px; background: #10b981; border-radius: 50%; border: 3px solid white;">
+                            </div>
+                        </div>
+
+                        <!-- User Info -->
+                        <div style="flex: 1;">
+                            <h2 id="displayName"
+                                style="font-size: 22px; margin: 0; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2); background: none; -webkit-text-fill-color: white;">
+                                User</h2>
+                            <div id="displayUsername"
+                                style="color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 4px;">@user</div>
+                            <div id="userStatus"
+                                style="display: inline-block; margin-top: 8px; padding: 4px 12px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 11px; color: white; font-weight: 600;">
+                                <i class="bi bi-star-fill" style="color: #fbbf24;"></i> Free User
+                            </div>
+                        </div>
+
+                        <!-- Edit Button -->
+                        <button onclick="switchTab('profile')"
+                            style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 16px; border-radius: 12px; cursor: pointer; backdrop-filter: blur(10px); transition: all 0.3s;">
+                            <i class="bi bi-person-circle" style="font-size: 18px;"></i>
+                        </button>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                        <div
+                            style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 12px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 20px; font-weight: bold; color: white;" id="profileDays">0</div>
+                            <div style="font-size: 10px; color: rgba(255,255,255,0.8); margin-top: 2px;">Kunlar</div>
+                        </div>
+                        <div
+                            style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 12px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 20px; font-weight: bold; color: white;" id="profileTasks">0</div>
+                            <div style="font-size: 10px; color: rgba(255,255,255,0.8); margin-top: 2px;">Vazifalar</div>
+                        </div>
+                        <div
+                            style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 12px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 20px; font-weight: bold; color: white;" id="profileStreak">0</div>
+                            <div style="font-size: 10px; color: rgba(255,255,255,0.8); margin-top: 2px;">Streak</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                @keyframes pulse {
+
+                    0%,
+                    100% {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+
+                    50% {
+                        opacity: 0.8;
+                        transform: scale(1.05);
+                    }
+                }
+            </style>
+
+            <h3 style="margin: 10px 0 5px;">Mening kunim</h3>
+
+            <!-- SHORTCUTS GRID -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div class="card" onclick="openQuiz()"
+                    style="margin:0; text-align:center; background: linear-gradient(135deg, #667eea, #764ba2); cursor:pointer;">
+                    <i class="bi bi-controller" style="font-size:24px; color:white;"></i>
+                    <div style="color:white; font-size:13px;">Testlar</div>
+                </div>
+                <div class="card" onclick="openRank()"
+                    style="margin:0; text-align:center; background: linear-gradient(135deg, #ff9966, #ff5e62); cursor:pointer;">
+                    <i class="bi bi-trophy" style="font-size:24px; color:white;"></i>
+                    <div style="color:white; font-size:13px;">Top 5</div>
+                </div>
+                <div class="card" onclick="switchTab('deadlines')"
+                    style="margin:0; text-align:center; background: linear-gradient(135deg, #eb3349, #f45c43); cursor:pointer; grid-column: span 2;">
+                    <i class="bi bi-alarm" style="font-size:24px; color:white;"></i><span
+                        style="color:white; font-size:14px; margin-left:10px;">Muddatchi (Deadlines)</span>
+                </div>
+            </div>
+
+            <!-- USEFUL TOOLS -->
+            <h3 style="margin: 15px 0 5px;">🛠 Foydali Vositalar</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom:10px;">
+                <div onclick="switchTab('calculator')" class="card"
+                    style="text-align: center; cursor: pointer; margin:0; background:linear-gradient(135deg, rgba(52,152,219,0.1), rgba(52,152,219,0.05)); border:1px solid rgba(52,152,219,0.3);">
+                    <i class="bi bi-calculator"
+                        style="color:#3498db; font-size:20px;"></i><br><small>Kalkulyator</small>
+                </div>
+                <div onclick="switchTab('schedule')" class="card"
+                    style="text-align: center; cursor: pointer; margin:0; background:linear-gradient(135deg, rgba(155,89,182,0.1), rgba(155,89,182,0.05)); border:1px solid rgba(155,89,182,0.3);">
+                    <i class="bi bi-calendar-week" style="color:#9b59b6; font-size:20px;"></i><br><small>Jadval</small>
+                </div>
+                <div onclick="switchTab('notes')" class="card"
+                    style="text-align: center; cursor: pointer; margin:0; background:linear-gradient(135deg, rgba(230,126,34,0.1), rgba(230,126,34,0.05)); border:1px solid rgba(230,126,34,0.3);">
+                    <i class="bi bi-sticky" style="color:#e67e22; font-size:20px;"></i><br><small>Eslatma</small>
+                </div>
+                <div onclick="switchTab('progress')" class="card"
+                    style="text-align: center; cursor: pointer; margin:0; background:linear-gradient(135deg, rgba(46,204,113,0.1), rgba(46,204,113,0.05)); border:1px solid rgba(46,204,113,0.3);">
+                    <i class="bi bi-graph-up" style="color:#2ecc71; font-size:20px;"></i><br><small>Progress</small>
+                </div>
+                <div onclick="switchTab('goals')" class="card"
+                    style="text-align: center; cursor: pointer; margin:0; background:linear-gradient(135deg, rgba(241,196,15,0.1), rgba(241,196,15,0.05)); border:1px solid rgba(241,196,15,0.3);">
+                    <i class="bi bi-bullseye" style="color:#f1c40f; font-size:20px;"></i><br><small>Maqsadlar</small>
+                </div>
+                <div onclick="switchTab('studyplan')" class="card"
+                    style="text-align: center; cursor: pointer; margin:0; background:linear-gradient(135deg, rgba(231,76,60,0.1), rgba(231,76,60,0.05)); border:1px solid rgba(231,76,60,0.3);">
+                    <i class="bi bi-book-half" style="color:#e74c3c; font-size:20px;"></i><br><small>O'qish Reja</small>
+                </div>
+                <div onclick="switchTab('budget')" class="card"
+                    style="text-align: center; cursor: pointer; margin:0; background:linear-gradient(135deg, rgba(26,188,156,0.1), rgba(26,188,156,0.05)); border:1px solid rgba(26,188,156,0.3);">
+                    <i class="bi bi-wallet2" style="color:#1abc9c; font-size:20px;"></i><br><small>Byudjet</small>
+                </div>
+                <div onclick="toggleDarkMode()" class="card"
+                    style="text-align: center; cursor: pointer; margin:0; background:linear-gradient(135deg, rgba(149,165,166,0.1), rgba(149,165,166,0.05)); border:1px solid rgba(149,165,166,0.3);">
+                    <i class="bi bi-moon-stars" id="themeIcon"
+                        style="color:#95a5a6; font-size:20px;"></i><br><small>Rejim</small>
+                </div>
+            </div>
+
+            <!-- EXISTING SHORTCUTS -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div onclick="switchTab('habits')" class="card" style="text-align: center; cursor: pointer; margin:0;">
+                    <i class="bi bi-check-square" style="color:var(--success);"></i><br><small>Odatlar</small>
+                </div>
+                <div onclick="switchTab('focus')" class="card" style="text-align: center; cursor: pointer; margin:0;"><i
+                        class="bi bi-hourglass-split" style="color:var(--accent-primary);"></i><br><small>Focus</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- DEADLINE SECTION -->
+        <div id="deadlines-section" class="section">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2>⏳ Muddatchi</h2>
+                <button onclick="openModal('deadlineModal')" class="btn btn-primary" style="width:auto;">+</button>
+            </div>
+            <div id="dlList"></div>
+            <p style="font-size:12px; color:#777; margin-top:10px;">* Deadline qo'shganda Botga habar boradi.</p>
+        </div>
+
+        <!-- QUIZ SECTION -->
+        <div id="quiz-section" class="section">
+            <h2 style="margin-bottom:20px;">🧠 Bilim Testlari</h2>
+
+            <!-- Subject Selection -->
+            <div id="quiz-subjects">
+                <div style="margin-bottom: 16px;">
+                    <input type="text" id="subjectSearch" placeholder="🔍 Fan qidirish..."
+                        style="width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-main); font-size: 14px;">
+                </div>
+
+                <!-- Subject Categories -->
+                <div style="margin-bottom: 12px;">
+                    <div
+                        style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                        📚 Asosiy fanlar</div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div class="quiz-subject-card" data-subject="math" onclick="selectSubject('math')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">📐
+                            </div>
+                            <div class="subject-name">Matematika</div>
+                            <div class="subject-count">50 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="physics" onclick="selectSubject('physics')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #f093fb, #f5576c);">⚛️
+                            </div>
+                            <div class="subject-name">Fizika</div>
+                            <div class="subject-count">45 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="chemistry" onclick="selectSubject('chemistry')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">🧪
+                            </div>
+                            <div class="subject-name">Kimyo</div>
+                            <div class="subject-count">40 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="biology" onclick="selectSubject('biology')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">🧬
+                            </div>
+                            <div class="subject-name">Biologiya</div>
+                            <div class="subject-count">35 savol</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div
+                        style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                        💻 IT va Texnologiya</div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div class="quiz-subject-card" data-subject="programming"
+                            onclick="selectSubject('programming')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #fa8bff, #2bd2ff);">💻
+                            </div>
+                            <div class="subject-name">Dasturlash</div>
+                            <div class="subject-count">60 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="database" onclick="selectSubject('database')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #ff9a9e, #fecfef);">🗄️
+                            </div>
+                            <div class="subject-name">Ma'lumotlar bazasi</div>
+                            <div class="subject-count">30 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="networking" onclick="selectSubject('networking')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #a8edea, #fed6e3);">🌐
+                            </div>
+                            <div class="subject-name">Tarmoqlar</div>
+                            <div class="subject-count">25 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="webdev" onclick="selectSubject('webdev')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #fbc2eb, #a6c1ee);">🎨
+                            </div>
+                            <div class="subject-name">Web Dasturlash</div>
+                            <div class="subject-count">55 savol</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div
+                        style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                        🌍 Tillar</div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div class="quiz-subject-card" data-subject="english" onclick="selectSubject('english')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #fdcbf1, #e6dee9);">
+                                🇬🇧</div>
+                            <div class="subject-name">English</div>
+                            <div class="subject-count">70 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="russian" onclick="selectSubject('russian')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #a1c4fd, #c2e9fb);">
+                                🇷🇺</div>
+                            <div class="subject-name">Rus tili</div>
+                            <div class="subject-count">50 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="uzbek" onclick="selectSubject('uzbek')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);">
+                                🇺🇿</div>
+                            <div class="subject-name">O'zbek tili</div>
+                            <div class="subject-count">45 savol</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <div
+                        style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">
+                        📖 Boshqa fanlar</div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                        <div class="quiz-subject-card" data-subject="history" onclick="selectSubject('history')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #ff6e7f, #bfe9ff);">📜
+                            </div>
+                            <div class="subject-name">Tarix</div>
+                            <div class="subject-count">40 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="geography" onclick="selectSubject('geography')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #e0c3fc, #8ec5fc);">🗺️
+                            </div>
+                            <div class="subject-name">Geografiya</div>
+                            <div class="subject-count">35 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="literature" onclick="selectSubject('literature')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #f77062, #fe5196);">📚
+                            </div>
+                            <div class="subject-name">Adabiyot</div>
+                            <div class="subject-count">30 savol</div>
+                        </div>
+                        <div class="quiz-subject-card" data-subject="economics" onclick="selectSubject('economics')">
+                            <div class="subject-icon" style="background: linear-gradient(135deg, #fccb90, #d57eeb);">💰
+                            </div>
+                            <div class="subject-name">Iqtisod</div>
+                            <div class="subject-count">25 savol</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Difficulty Selection -->
+            <div id="quiz-difficulty" style="display: none;">
+                <button onclick="showSubjects()" class="btn btn-outline" style="margin-bottom: 16px;">
+                    <i class="bi bi-arrow-left"></i> Orqaga
+                </button>
+                <h3 style="margin-bottom: 16px;">Qiyinlik darajasini tanlang</h3>
+                <div style="display: grid; gap: 12px;">
+                    <div class="difficulty-card" onclick="startQuiz('easy')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div
+                                style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #43e97b, #38f9d7); display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                🟢</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Oson</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">10 savol • 5 daqiqa</div>
+                            </div>
+                            <i class="bi bi-chevron-right" style="color: var(--text-muted);"></i>
+                        </div>
+                    </div>
+                    <div class="difficulty-card" onclick="startQuiz('medium')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div
+                                style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #fa709a, #fee140); display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                🟡</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">O'rta</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">15 savol • 8 daqiqa</div>
+                            </div>
+                            <i class="bi bi-chevron-right" style="color: var(--text-muted);"></i>
+                        </div>
+                    </div>
+                    <div class="difficulty-card" onclick="startQuiz('hard')">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div
+                                style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #f093fb, #f5576c); display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                🔴</div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">Qiyin</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">20 savol • 12 daqiqa</div>
+                            </div>
+                            <i class="bi bi-chevron-right" style="color: var(--text-muted);"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Game -->
+            <div id="quiz-game" style="display:none;">
+                <!-- Quiz Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <button onclick="exitQuiz()" class="btn btn-outline" style="padding: 8px 12px;">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div id="quizTimer"
+                            style="display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; font-size: 14px; font-weight: 600; color: #ef4444;">
+                            <i class="bi bi-clock-fill"></i>
+                            <span id="timerDisplay">5:00</span>
+                        </div>
+                        <div
+                            style="padding: 6px 12px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 10px; font-size: 14px; font-weight: 600; color: var(--accent-secondary);">
+                            <span id="quizQNum">1</span>/<span id="quizTotal">10</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div
+                    style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 20px; overflow: hidden;">
+                    <div id="quizProgress"
+                        style="height: 100%; background: var(--accent-gradient); border-radius: 10px; width: 10%; transition: width 0.3s;">
+                    </div>
+                </div>
+
+                <!-- Question Card -->
+                <div class="card" style="margin-bottom: 16px;">
+                    <div id="quizSubjectBadge"
+                        style="display: inline-block; padding: 4px 12px; background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.3); border-radius: 10px; font-size: 11px; font-weight: 700; color: var(--accent-purple); text-transform: uppercase; margin-bottom: 12px;">
+                        Matematika</div>
+                    <h3 id="quizQuestion" style="margin-bottom: 20px; font-size: 18px; line-height: 1.6;">Savol
+                        yuklanmoqda...</h3>
+                    <div id="quizOptions"></div>
+                </div>
+
+                <!-- Score Display -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 14px; color: var(--text-muted);">
+                        <i class="bi bi-trophy-fill" style="color: var(--warning);"></i>
+                        Ball: <span id="quizScore" style="font-weight: 700; color: var(--text-main);">0</span>
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-muted);">
+                        <i class="bi bi-check-circle-fill" style="color: var(--success);"></i>
+                        To'g'ri: <span id="quizCorrect" style="font-weight: 700; color: var(--text-main);">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Result -->
+            <div id="quiz-result" style="display:none; text-align:center;">
+                <div class="card" style="padding: 32px;">
+                    <div id="resultIcon" style="font-size: 64px; margin-bottom: 16px;">🏆</div>
+                    <h2 style="margin-bottom: 8px;">Test yakunlandi!</h2>
+                    <div
+                        style="font-size: 48px; font-weight: 800; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 16px 0;">
+                        <span id="finalScore">0</span>/<span id="finalTotal">10</span>
+                    </div>
+                    <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">
+                        <span id="resultPercentage">0%</span> to'g'ri javob
+                    </div>
+
+                    <!-- Stats -->
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px;">
+                        <div style="padding: 12px; background: rgba(16,185,129,0.1); border-radius: 12px;">
+                            <div style="font-size: 24px; font-weight: 700; color: var(--success);" id="resultCorrect">0
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-muted);">To'g'ri</div>
+                        </div>
+                        <div style="padding: 12px; background: rgba(239,68,68,0.1); border-radius: 12px;">
+                            <div style="font-size: 24px; font-weight: 700; color: var(--danger);" id="resultWrong">0
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Noto'g'ri</div>
+                        </div>
+                        <div style="padding: 12px; background: rgba(139,92,246,0.1); border-radius: 12px;">
+                            <div style="font-size: 24px; font-weight: 700; color: var(--accent-purple);"
+                                id="resultTime">0:00</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">Vaqt</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="restartQuiz()" class="btn btn-primary" style="flex: 1;">
+                            <i class="bi bi-arrow-clockwise"></i> Qayta boshlash
+                        </button>
+                        <button onclick="showSubjects()" class="btn btn-outline" style="flex: 1;">
+                            <i class="bi bi-house-fill"></i> Bosh sahifa
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .quiz-subject-card {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(20px);
+                border: 1px solid var(--glass-border);
+                border-radius: 16px;
+                padding: 16px;
+                cursor: pointer;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                text-align: center;
+            }
+
+            .quiz-subject-card:hover {
+                background: rgba(255, 255, 255, 0.08);
+                transform: translateY(-4px);
+                border-color: rgba(139, 92, 246, 0.3);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(139, 92, 246, 0.3);
+            }
+
+            .subject-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                margin: 0 auto 12px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+            }
+
+            .subject-name {
+                font-weight: 600;
+                margin-bottom: 4px;
+                font-size: 14px;
+            }
+
+            .subject-count {
+                font-size: 11px;
+                color: var(--text-muted);
+            }
+
+            .difficulty-card {
+                background: rgba(255, 255, 255, 0.05);
+                backdrop-filter: blur(20px);
+                border: 1px solid var(--glass-border);
+                border-radius: 16px;
+                padding: 16px;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .difficulty-card:hover {
+                background: rgba(255, 255, 255, 0.08);
+                transform: translateX(4px);
+                border-color: rgba(139, 92, 246, 0.3);
+            }
+
+            .quiz-option {
+                background: rgba(255, 255, 255, 0.05);
+                border: 2px solid var(--glass-border);
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+                cursor: pointer;
+                transition: all 0.3s;
+                font-size: 15px;
+            }
+
+            .quiz-option:hover {
+                background: rgba(139, 92, 246, 0.1);
+                border-color: var(--accent-purple);
+                transform: translateX(4px);
+            }
+
+            .quiz-option.correct {
+                background: rgba(16, 185, 129, 0.15);
+                border-color: var(--success);
+                animation: correctPulse 0.5s;
+            }
+
+            .quiz-option.wrong {
+                background: rgba(239, 68, 68, 0.15);
+                border-color: var(--danger);
+                animation: wrongShake 0.5s;
+            }
+
+            @keyframes correctPulse {
+
+                0%,
+                100% {
+                    transform: scale(1);
+                }
+
+                50% {
+                    transform: scale(1.02);
+                }
+            }
+
+            @keyframes wrongShake {
+
+                0%,
+                100% {
+                    transform: translateX(0);
+                }
+
+                25% {
+                    transform: translateX(-8px);
+                }
+
+                75% {
+                    transform: translateX(8px);
+                }
+            }
+        </style>
+
+        <!-- RANK SECTION -->
+        <div id="rank-section" class="section">
+            <h2 style="margin-bottom:15px;">🏆 Top Users</h2>
+            <div id="rankList"></div>
+            <button onclick="switchTab('home')" class="btn btn-outline" style="margin-top:20px;">Orqaga</button>
+        </div>
+
+        <!-- OTHERS -->
+        <div id="library-section" class="section">
+            <h2>📚 Kutubxona</h2>
+            <div class="book-list" id="bookGrid"></div>
+        </div>
+        <div id="habits-section" class="section">
+            <div style="display:flex; justify-content:space-between;">
+                <h2>Odatlar</h2><button onclick="openModal('habitModal')" class="btn btn-primary"
+                    style="width:auto;">+</button>
+            </div>
+            <div id="habitList" style="margin-top:10px;"></div>
+        </div>
+        <div id="focus-section" class="section">
+            <h2>Focus</h2>
+            <div class="card" style="text-align:center;">
+                <div style="font-size:40px; font-weight:bold;" id="timerDisplay">25:00</div><button
+                    onclick="toggleTimer()" id="startBtn" class="btn btn-primary">Boshlash</button>
+            </div>
+        </div>
+        <div id="dreams-section" class="section">
+            <div style="display:flex; justify-content:space-between;">
+                <h2>Orzular</h2><button onclick="openModal('dreamModal')" class="btn btn-primary"
+                    style="width:auto;">+</button>
+            </div>
+            <div class="dream-grid" id="dreamGrid" style="margin-top:10px;"></div>
+        </div>
+
+        <!-- CALCULATOR -->
+        <div id="calculator-section" class="section">
+            <h2>🧮 Kalkulyator</h2>
+            <div class="card" style="padding:20px;">
+                <input type="text" id="calcDisplay" class="form-input" readonly value="0"
+                    style="font-size:24px; text-align:right; margin-bottom:15px;">
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:10px;">
+                    <button onclick="calcBtn('7')" class="btn btn-outline">7</button>
+                    <button onclick="calcBtn('8')" class="btn btn-outline">8</button>
+                    <button onclick="calcBtn('9')" class="btn btn-outline">9</button>
+                    <button onclick="calcBtn('/')" class="btn btn-primary">÷</button>
+                    <button onclick="calcBtn('4')" class="btn btn-outline">4</button>
+                    <button onclick="calcBtn('5')" class="btn btn-outline">5</button>
+                    <button onclick="calcBtn('6')" class="btn btn-outline">6</button>
+                    <button onclick="calcBtn('*')" class="btn btn-primary">×</button>
+                    <button onclick="calcBtn('1')" class="btn btn-outline">1</button>
+                    <button onclick="calcBtn('2')" class="btn btn-outline">2</button>
+                    <button onclick="calcBtn('3')" class="btn btn-outline">3</button>
+                    <button onclick="calcBtn('-')" class="btn btn-primary">−</button>
+                    <button onclick="calcBtn('0')" class="btn btn-outline">0</button>
+                    <button onclick="calcBtn('.')" class="btn btn-outline">.</button>
+                    <button onclick="calcEval()" class="btn btn-primary">=</button>
+                    <button onclick="calcBtn('+')" class="btn btn-primary">+</button>
+                    <button onclick="calcClear()" class="btn btn-outline" style="grid-column: span 4;">C</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCHEDULE -->
+        <div id="schedule-section" class="section">
+            <h2>📅 Dars Jadvali</h2>
+            <div id="scheduleList"></div>
+            <button onclick="openModal('scheduleModal')" class="btn btn-primary" style="margin-top:10px;">+ Dars
+                qo'shish</button>
+        </div>
+
+        <!-- NOTES -->
+        <div id="notes-section" class="section">
+            <h2>📝 Eslatmalar</h2>
+            <div id="notesList"></div>
+            <button onclick="openModal('noteModal')" class="btn btn-primary" style="margin-top:10px;">+ Eslatma
+                qo'shish</button>
+        </div>
+
+        <!-- PROGRESS -->
+        <div id="progress-section" class="section">
+            <h2>📈 Mening Progressim</h2>
+            <div class="card">
+                <h3 style="font-size:14px; margin-bottom:10px;">Bu hafta</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="background:rgba(88,101,242,0.1); padding:15px; border-radius:10px; text-align:center;">
+                        <div style="font-size:28px; font-weight:bold; color:var(--accent-primary);" id="studyHours">0
+                        </div>
+                        <div style="font-size:12px; color:var(--text-muted);">Soat o'qildi</div>
+                    </div>
+                    <div style="background:rgba(46,204,113,0.1); padding:15px; border-radius:10px; text-align:center;">
+                        <div style="font-size:28px; font-weight:bold; color:var(--success);" id="completedTasks">0</div>
+                        <div style="font-size:12px; color:var(--text-muted);">Vazifa bajarildi</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card" style="margin-top:15px;">
+                <h3 style="font-size:14px; margin-bottom:10px;">Motivatsiya</h3>
+                <p id="motivationQuote" style="font-style:italic; color:var(--text-muted); font-size:13px;">
+                    "Muvaffaqiyat - bu kichik sa'y-harakatlarning har kuni takrorlanishi."</p>
+            </div>
+        </div>
+
+        <!-- GOALS -->
+        <div id="goals-section" class="section">
+            <h2>🎯 Maqsadlarim</h2>
+            <div class="card" style="margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="font-size:14px; margin:0;">Qisqa muddatli (Haftalik)</h3>
+                    <button onclick="openModal('goalModal')" data-type="short" class="btn btn-primary"
+                        style="width:auto; padding:5px 10px; font-size:12px;">+</button>
+                </div>
+                <div id="shortGoalsList"></div>
+            </div>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h3 style="font-size:14px; margin:0;">Uzoq muddatli (Yillik)</h3>
+                    <button onclick="openModal('goalModal')" data-type="long" class="btn btn-primary"
+                        style="width:auto; padding:5px 10px; font-size:12px;">+</button>
+                </div>
+                <div id="longGoalsList"></div>
+            </div>
+        </div>
+
+        <!-- STUDY PLAN -->
+        <div id="studyplan-section" class="section">
+            <h2>📖 O'qish Rejasi</h2>
+            <div id="studyPlanList"></div>
+            <button onclick="openModal('studyPlanModal')" class="btn btn-primary" style="margin-top:10px;">+ Fan
+                qo'shish</button>
+        </div>
+
+        <!-- BUDGET -->
+        <div id="budget-section" class="section">
+            <h2>💰 Byudjet</h2>
+            <div class="card" style="margin-bottom:15px;">
+                <h3 style="font-size:14px; margin-bottom:10px;">Bu oy</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div style="background:rgba(46,204,113,0.1); padding:15px; border-radius:10px; text-align:center;">
+                        <div style="font-size:24px; font-weight:bold; color:var(--success);" id="totalIncome">0</div>
+                        <div style="font-size:12px; color:var(--text-muted);">Daromad</div>
+                    </div>
+                    <div style="background:rgba(231,76,60,0.1); padding:15px; border-radius:10px; text-align:center;">
+                        <div style="font-size:24px; font-weight:bold; color:var(--danger);" id="totalExpense">0</div>
+                        <div style="font-size:12px; color:var(--text-muted);">Xarajat</div>
+                    </div>
+                </div>
+                <div
+                    style="margin-top:15px; padding:15px; background:rgba(88,101,242,0.1); border-radius:10px; text-align:center;">
+                    <div style="font-size:28px; font-weight:bold; color:var(--accent-primary);" id="balance">0</div>
+                    <div style="font-size:12px; color:var(--text-muted);">Qoldiq</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="font-size:14px; margin-bottom:10px;">Xarajatlar</h3>
+                <div id="expensesList"></div>
+                <button onclick="openModal('expenseModal')" class="btn btn-primary"
+                    style="margin-top:10px; width:100%;">+ Xarajat qo'shish</button>
+            </div>
+        </div>
+
+
+        <!-- PROFILE SECTION -->
+        <div id="profile-section" class="section">
+            <h2>👤 Profil</h2>
+
+            <!-- Profile Header -->
+            <div class="card"
+                style="background: var(--accent-gradient); padding: 30px; text-align: center; border: none;">
+                <div style="position: relative; display: inline-block; margin-bottom: 15px;">
+                    <img id="profileAvatar"
+                        style="width: 100px; height: 100px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.3); object-fit: cover;"
+                        src="">
+                    <button onclick="openModal('profileModal')"
+                        style="position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; border-radius: 50%; background: white; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                        <i class="bi bi-camera" style="color: var(--accent-primary);"></i>
+                    </button>
+                </div>
+                <h3 id="profileName"
+                    style="color: white; margin: 10px 0 5px; background: none; -webkit-text-fill-color: white;">User
+                </h3>
+                <p id="profileUsername" style="color: rgba(255,255,255,0.8); font-size: 14px; margin: 0;">@user</p>
+                <div id="profileBadge"
+                    style="display: inline-block; margin-top: 12px; padding: 6px 16px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 12px; color: white; font-weight: 600;">
+                    <i class="bi bi-star-fill" style="color: #fbbf24;"></i> Free User
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px;">
+                <div class="card" style="text-align: center;">
+                    <i class="bi bi-calendar-check" style="font-size: 28px; color: var(--accent-primary);"></i>
+                    <div style="font-size: 24px; font-weight: bold; margin: 8px 0;" id="profileDaysCount">0</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Kunlar</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <i class="bi bi-check-circle" style="font-size: 28px; color: var(--success);"></i>
+                    <div style="font-size: 24px; font-weight: bold; margin: 8px 0;" id="profileTasksCount">0</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Vazifalar</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <i class="bi bi-fire" style="font-size: 28px; color: var(--warning);"></i>
+                    <div style="font-size: 24px; font-weight: bold; margin: 8px 0;" id="profileStreakCount">0</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Streak</div>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <i class="bi bi-trophy" style="font-size: 28px; color: #fbbf24;"></i>
+                    <div style="font-size: 24px; font-weight: bold; margin: 8px 0;" id="profilePoints">0</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Ballar</div>
+                </div>
+            </div>
+
+            <!-- Achievements -->
+            <div class="card">
+                <h3 style="font-size: 16px; margin-bottom: 12px;">🏆 Yutuqlar</h3>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                    <div
+                        style="text-align: center; padding: 12px; background: rgba(99,102,241,0.1); border-radius: 12px;">
+                        <i class="bi bi-award-fill" style="font-size: 24px; color: var(--accent-primary);"></i>
+                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">Boshlang'ich</div>
+                    </div>
+                    <div
+                        style="text-align: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; opacity: 0.5;">
+                        <i class="bi bi-star" style="font-size: 24px; color: var(--text-muted);"></i>
+                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">7 kun</div>
+                    </div>
+                    <div
+                        style="text-align: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; opacity: 0.5;">
+                        <i class="bi bi-gem" style="font-size: 24px; color: var(--text-muted);"></i>
+                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">30 kun</div>
+                    </div>
+                    <div
+                        style="text-align: center; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; opacity: 0.5;">
+                        <i class="bi bi-trophy-fill" style="font-size: 24px; color: var(--text-muted);"></i>
+                        <div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">100 kun</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity -->
+            <div class="card">
+                <h3 style="font-size: 16px; margin-bottom: 12px;">📊 Faollik</h3>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 13px; color: var(--text-muted);">O'qish vaqti</span>
+                    <span style="font-size: 13px; font-weight: 600;" id="profileStudyTime">0 soat</span>
+                </div>
+                <div
+                    style="background: rgba(255,255,255,0.05); height: 8px; border-radius: 10px; overflow: hidden; margin-bottom: 15px;">
+                    <div id="profileStudyBar"
+                        style="background: var(--accent-gradient); height: 100%; width: 0%; transition: width 0.3s;">
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 13px; color: var(--text-muted);">Bajarilgan vazifalar</span>
+                    <span style="font-size: 13px; font-weight: 600;" id="profileCompletedTasks">0/0</span>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); height: 8px; border-radius: 10px; overflow: hidden;">
+                    <div id="profileTaskBar"
+                        style="background: var(--success); height: 100%; width: 0%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+
+            <!-- Premium Upgrade -->
+            <div class="card"
+                style="background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border: none; padding: 25px;">
+                <div style="text-align: center; color: white;">
+                    <i class="bi bi-gem" style="font-size: 40px; margin-bottom: 10px;"></i>
+                    <h3 style="margin: 10px 0; color: white; background: none; -webkit-text-fill-color: white;">
+                        Premium'ga o'ting!</h3>
+                    <p style="font-size: 13px; margin: 10px 0; opacity: 0.9;">Barcha funksiyalardan cheklovsiz
+                        foydalaning</p>
+                    <button onclick="alert('Premium xarid qilish uchun botga murojaat qiling!')" class="btn"
+                        style="background: white; color: #f59e0b; margin-top: 10px; font-weight: 700;">
+                        <i class="bi bi-star-fill"></i> Premium olish
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="card">
+                <h3 style="font-size: 16px; margin-bottom: 12px;">⚙️ Sozlamalar</h3>
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--glass-border);">
+                    <div>
+                        <div style="font-size: 14px; font-weight: 500;">Bildirishnomalar</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Push xabarlari</div>
+                    </div>
+                    <label style="position: relative; display: inline-block; width: 48px; height: 26px;">
+                        <input type="checkbox" checked style="opacity: 0; width: 0; height: 0;">
+                        <span
+                            style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: var(--accent-primary); border-radius: 26px; transition: 0.4s;"></span>
+                    </label>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--glass-border);">
+                    <div>
+                        <div style="font-size: 14px; font-weight: 500;">Tungi rejim</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">Dark mode</div>
+                    </div>
+                    <button onclick="toggleDarkMode()" class="btn btn-outline"
+                        style="width: auto; padding: 6px 12px; font-size: 12px;">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0;">
+                    <div>
+                        <div style="font-size: 14px; font-weight: 500;">Til</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">O'zbek tili</div>
+                    </div>
+                    <i class="bi bi-chevron-right" style="color: var(--text-muted);"></i>
+                </div>
+            </div>
+
+            <!-- Logout -->
+            <button onclick="alert('Chiqish funksiyasi tez orada qo\'shiladi!')" class="btn btn-outline"
+                style="color: var(--danger); border-color: var(--danger);">
+                <i class="bi bi-box-arrow-right"></i> Chiqish
+            </button>
+        </div>
+
+        <!-- ADMIN (Hidden) -->
+        <div id="admin-section" class="section">
+            <div
+                style="background:linear-gradient(135deg, #667eea, #764ba2); color:white; padding:15px; border-radius:15px; text-align:center; font-weight:bold; margin-bottom:20px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                👑 ADMIN PANEL
+            </div>
+
+            <!-- Admin Stats -->
+            <div class="card" style="margin-bottom:15px;">
+                <h3 style="margin-bottom:10px; font-size:16px;">📊 Statistika</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px;">
+                    <div style="background:rgba(88,101,242,0.1); padding:10px; border-radius:8px;">
+                        <div style="color:var(--text-muted); font-size:11px;">Jami Foydalanuvchilar</div>
+                        <div style="font-size:20px; font-weight:bold; color:var(--accent-primary);"
+                            id="adminTotalUsers">-</div>
+                    </div>
+                    <div style="background:rgba(241,196,15,0.1); padding:10px; border-radius:8px;">
+                        <div style="color:var(--text-muted); font-size:11px;">Premium</div>
+                        <div style="font-size:20px; font-weight:bold; color:var(--warning);" id="adminPremiumUsers">-
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Actions -->
+            <h3 style="margin:15px 0 10px; font-size:14px;">⚡ Tezkor Amallar</h3>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                <div class="card" onclick="openModal('broadcastModal')"
+                    style="cursor:pointer; text-align:center; background:linear-gradient(135deg, rgba(88,101,242,0.1), rgba(88,101,242,0.05)); border:1px solid rgba(88,101,242,0.3);">
+                    <i class="bi bi-megaphone" style="font-size:24px; color:var(--accent-primary);"></i>
+                    <div style="margin-top:5px; font-size:12px;">Broadcast</div>
+                </div>
+                <div class="card" onclick="openModal('premiumAdminModal')"
+                    style="cursor:pointer; text-align:center; background:linear-gradient(135deg, rgba(241,196,15,0.1), rgba(241,196,15,0.05)); border:1px solid rgba(241,196,15,0.3);">
+                    <i class="bi bi-gem" style="font-size:24px; color:var(--warning);"></i>
+                    <div style="margin-top:5px; font-size:12px;">Premium Berish</div>
+                </div>
+                <div class="card" onclick="openModal('bonusAllModal')"
+                    style="cursor:pointer; text-align:center; background:linear-gradient(135deg, rgba(46,204,113,0.1), rgba(46,204,113,0.05)); border:1px solid rgba(46,204,113,0.3);">
+                    <i class="bi bi-gift" style="font-size:24px; color:var(--success);"></i>
+                    <div style="margin-top:5px; font-size:12px;">Hammaga Bonus</div>
+                </div>
+                <div class="card" onclick="openModal('statsDetailModal')"
+                    style="cursor:pointer; text-align:center; background:linear-gradient(135deg, rgba(155,89,182,0.1), rgba(155,89,182,0.05)); border:1px solid rgba(155,89,182,0.3);">
+                    <i class="bi bi-bar-chart" style="font-size:24px; color:#9b59b6;"></i>
+                    <div style="margin-top:5px; font-size:12px;">Batafsil</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="deadlineModal" class="modal">
+        <h3>Yangi Deadline</h3>
+        <div class="card"><input id="dlTitle" class="form-input" placeholder="Fan nomi yoki Vazifa"><input type="date"
+                id="dlDate" class="form-input"><button onclick="addDeadline()" class="btn btn-primary">Saqlash
+                (Botga)</button><button onclick="closeModal('deadlineModal')" class="btn btn-outline"
+                style="margin-top:10px;">Yopish</button></div>
+    </div>
+
+    <!-- Broadcast Modal -->
+    <div id="broadcastModal" class="modal">
+        <div class="card" style="max-width:500px; margin:20px auto;">
+            <h3 style="margin-bottom:15px;">📢 Xabar Yuborish</h3>
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:10px;">Barcha foydalanuvchilarga xabar
+                yuboring</p>
+            <textarea id="broadcastText" class="form-input" rows="5" placeholder="Xabaringizni kiriting..."></textarea>
+            <div id="broadcastStatus" style="margin:10px 0; font-size:13px; color:var(--text-muted);"></div>
+            <button onclick="sendBroadcast()" class="btn btn-primary">📤 Yuborish</button>
+            <button onclick="closeModal('broadcastModal')" class="btn btn-outline"
+                style="margin-top:10px;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Premium Admin Modal -->
+    <div id="premiumAdminModal" class="modal">
+        <div class="card" style="max-width:400px; margin:20px auto;">
+            <h3 style="margin-bottom:15px;">💎 Premium Berish</h3>
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:10px;">Foydalanuvchiga Premium status
+                bering</p>
+            <input id="premUserId" class="form-input" type="number" placeholder="Foydalanuvchi ID">
+            <input id="premDays" class="form-input" type="number" placeholder="Kunlar soni (masalan: 30)" value="30">
+            <div id="premiumStatus" style="margin:10px 0; font-size:13px; color:var(--text-muted);"></div>
+            <button onclick="givePremium()" class="btn btn-primary">✅ Berish</button>
+            <button onclick="closeModal('premiumAdminModal')" class="btn btn-outline"
+                style="margin-top:10px;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Bonus All Modal -->
+    <div id="bonusAllModal" class="modal">
+        <div class="card" style="max-width:400px; margin:20px auto;">
+            <h3 style="margin-bottom:15px;">🎁 Hammaga Bonus</h3>
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:10px;">Barcha foydalanuvchilarga Premium
+                bonus bering</p>
+            <input id="bonusDays" class="form-input" type="number" placeholder="Kunlar soni" value="5">
+            <div
+                style="background:rgba(241,196,15,0.1); padding:10px; border-radius:8px; margin:10px 0; font-size:12px;">
+                ⚠️ Diqqat: Bu barcha foydalanuvchilarga ta'sir qiladi!
+            </div>
+            <div id="bonusStatus" style="margin:10px 0; font-size:13px; color:var(--text-muted);"></div>
+            <button onclick="giveBonusAll()" class="btn btn-primary">🎉 Berish</button>
+            <button onclick="closeModal('bonusAllModal')" class="btn btn-outline"
+                style="margin-top:10px;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Stats Detail Modal -->
+    <div id="statsDetailModal" class="modal">
+        <div class="card" style="max-width:500px; margin:20px auto;">
+            <h3 style="margin-bottom:15px;">📊 Batafsil Statistika</h3>
+            <div id="statsDetailContent" style="font-size:13px;">
+                <div style="margin-bottom:10px;">Yuklanmoqda...</div>
+            </div>
+            <button onclick="closeModal('statsDetailModal')" class="btn btn-outline"
+                style="margin-top:15px;">Yopish</button>
+        </div>
+    </div>
+    <div id="profileModal" class="modal">
+        <h3>Profil</h3><input type="file" id="pImg" hidden onchange="processImage(this,'previewAvatar')"><label
+            for="pImg" class="btn btn-outline">Rasm</label><img id="previewAvatar" src=""
+            style="width:50px; display:block; margin:10px auto;"><input id="editName" class="form-input"
+            placeholder="Ism"><button onclick="saveProfile()" class="btn btn-primary">Saqlash</button><button
+            onclick="closeModal('profileModal')" class="btn btn-outline">Yopish</button>
+    </div>
+    <div id="habitModal" class="modal">
+        <h3>Yangi Odat</h3><input id="newHabitName" class="form-input"><button onclick="addHabit()"
+            class="btn btn-primary">Qo'shish</button><button onclick="closeModal('habitModal')"
+            class="btn btn-outline">Yopish</button>
+    </div>
+    <div id="dreamModal" class="modal">
+        <h3>Yangi Orzu</h3><input type="file" id="dImg" hidden onchange="processImage(this,'previewDream')"><label
+            for="dImg" class="btn btn-outline">Yuklash</label><img id="previewDream" src=""
+            style="width:100px; display:none;"><input id="newDreamTitle" class="form-input"><button onclick="addDream()"
+            class="btn btn-primary">Saqlash</button><button onclick="closeModal('dreamModal')"
+            class="btn btn-outline">Yopish</button>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div id="scheduleModal" class="modal">
+        <div class="card" style="max-width:400px; margin:20px auto;">
+            <h3>📅 Dars qo'shish</h3>
+            <select id="scheduleDay" class="form-input">
+                <option>Dushanba</option>
+                <option>Seshanba</option>
+                <option>Chorshanba</option>
+                <option>Payshanba</option>
+                <option>Juma</option>
+                <option>Shanba</option>
+            </select>
+            <input id="scheduleSubject" class="form-input" placeholder="Fan nomi">
+            <input id="scheduleTime" class="form-input" placeholder="Vaqt (09:00)">
+            <input id="scheduleRoom" class="form-input" placeholder="Xona (101)">
+            <button onclick="addSchedule()" class="btn btn-primary">Saqlash</button>
+            <button onclick="closeModal('scheduleModal')" class="btn btn-outline"
+                style="margin-top:10px;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="noteModal" class="modal">
+        <div class="card" style="max-width:400px; margin:20px auto;">
+            <h3>📝 Eslatma qo'shish</h3>
+            <input id="noteTitle" class="form-input" placeholder="Sarlavha">
+            <textarea id="noteText" class="form-input" rows="4" placeholder="Matn..."></textarea>
+            <button onclick="addNote()" class="btn btn-primary">Saqlash</button>
+            <button onclick="closeModal('noteModal')" class="btn btn-outline" style="margin-top:10px;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Goal Modal -->
+    <div id="goalModal" class="modal">
+        <div class="card" style="max-width:400px; margin:20px auto;">
+            <h3>🎯 Maqsad qo'shish</h3>
+            <input id="goalTitle" class="form-input" placeholder="Maqsad nomi">
+            <input id="goalDeadline" type="date" class="form-input">
+            <button onclick="addGoal()" class="btn btn-primary">Saqlash</button>
+            <button onclick="closeModal('goalModal')" class="btn btn-outline" style="margin-top:10px;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Study Plan Modal -->
+    <div id="studyPlanModal" class="modal">
+        <div class="card" style="max-width:400px; margin:20px auto;">
+            <h3>📖 Fan qo'shish</h3>
+            <input id="subjectName" class="form-input" placeholder="Fan nomi">
+            <input id="examDate" type="date" class="form-input" placeholder="Imtihon sanasi">
+            <textarea id="subjectTopics" class="form-input" rows="4"
+                placeholder="Mavzular (har birini yangi qatordan yozing)"></textarea>
+            <button onclick="addStudyPlan()" class="btn btn-primary">Saqlash</button>
+            <button onclick="closeModal('studyPlanModal')" class="btn btn-outline"
+                style="margin-top:10px;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expenseModal" class="modal">
+        <div class="card" style="max-width:400px; margin:20px auto;">
+            <h3>💰 Xarajat qo'shish</h3>
+            <select id="expenseType" class="form-input">
+                <option value="expense">Xarajat</option>
+                <option value="income">Daromad</option>
+            </select>
+            <select id="expenseCategory" class="form-input">
+                <option>Transport</option>
+                <option>Ovqat</option>
+                <option>Kitob</option>
+                <option>Internet</option>
+                <option>Boshqa</option>
+            </select>
+            <input id="expenseAmount" type="number" class="form-input" placeholder="Summa">
+            <input id="expenseNote" class="form-input" placeholder="Izoh (ixtiyoriy)">
+            <button onclick="addExpense()" class="btn btn-primary">Saqlash</button>
+            <button onclick="closeModal('expenseModal')" class="btn btn-outline"
+                style="margin-top:10px;">Yopish</button>
+        </div>
+    </div>
+
+    <div id="pdfViewer" class="pdf-modal">
+        <div style="height:50px; background:#111; display:flex; align-items:center; padding:0 15px; color:white;"><span
+                id="pdfTitle">PDF</span><button onclick="document.getElementById('pdfViewer').style.display='none'"
+                style="margin-left:auto; background:none; border:none; color:white; font-size:24px;">×</button></div>
+        <iframe id="pdfFrame" style="flex:1; border:none; background:white;"></iframe>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-item active" onclick="switchTab('home')" data-tab="home">
+            <i class="bi bi-house-fill"></i>
+            <span class="nav-item-label">Bosh</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('library')" data-tab="library">
+            <i class="bi bi-book"></i>
+            <span class="nav-item-label">Kitob</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('deadlines')" data-tab="deadlines">
+            <i class="bi bi-alarm"></i>
+            <span class="nav-item-label">Muddat</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('habits')" data-tab="habits">
+            <i class="bi bi-check-square"></i>
+            <span class="nav-item-label">Odat</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('admin')" id="nav-admin" data-tab="admin" style="display:none;">
+            <i class="bi bi-shield-lock"></i>
+            <span class="nav-item-label">Admin</span>
+        </div>
+    </nav>
+
+    <script>
+        const tg = window.Telegram.WebApp; tg.expand();
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('admin') === 'true') document.getElementById('nav-admin').style.display = 'flex';
+
+        // --- DEADLINE LOGIC ---
+        function loadDeadlines() {
+            const p = urlParams.get('dl');
+            const list = document.getElementById('dlList');
+            if (!p) { list.innerHTML = '<div style="text-align:center; color:#555;">Deadline yo\'q</div>'; return; }
+            list.innerHTML = '';
+            // Format: Title:Date|Title:Date
+            p.split('|').forEach(s => {
+                const [t, d] = s.split(':');
+                list.innerHTML += `<div class="dl-item"><span class="dl-title">${t}</span><span class="dl-date">${d}</span></div>`;
+            });
+        }
+        function addDeadline() {
+            const t = document.getElementById('dlTitle').value;
+            const d = document.getElementById('dlDate').value;
+            if (!t || !d) return;
+            tg.sendData(JSON.stringify({ action: "add_deadline", title: t, date: d }));
+            tg.close();
+        }
+
+        // --- QUIZ LOGIC ---
+        const quizData = {
+            'math': [
+                { q: "2 + 2 = ?", o: ["3", "4", "5", "6"], a: 1 },
+                { q: "10 × 5 = ?", o: ["50", "45", "55", "60"], a: 0 },
+                { q: "√16 = ?", o: ["2", "4", "6", "8"], a: 1 },
+                { q: "15 ÷ 3 = ?", o: ["3", "4", "5", "6"], a: 2 },
+                { q: "3² = ?", o: ["6", "9", "12", "15"], a: 1 }
+            ],
+            'physics': [
+                { q: "Yorug'lik tezligi qancha?", o: ["300,000 km/s", "150,000 km/s", "450,000 km/s"], a: 0 },
+                { q: "Nyutonning birinchi qonuni nima?", o: ["Inersiya", "Kuch", "Ta'sir"], a: 0 },
+                { q: "Energiya birligi?", o: ["Joul", "Vatt", "Nyuton"], a: 0 }
+            ],
+            'chemistry': [
+                { q: "Suvning kimyoviy formulasi?", o: ["H2O", "CO2", "O2", "H2"], a: 0 },
+                { q: "Kislorodning belgisi?", o: ["O", "K", "C", "H"], a: 0 },
+                { q: "Tuzning formulasi?", o: ["NaCl", "KCl", "CaCl2"], a: 0 }
+            ],
+            'biology': [
+                { q: "DNK nima?", o: ["Deoksiribonuklein kislota", "Ribonuklein kislota", "Protein"], a: 0 },
+                { q: "Fotosintez qayerda sodir bo'ladi?", o: ["Xloroplastda", "Mitoxondriyada", "Yadroda"], a: 0 }
+            ],
+            'programming': [
+                { q: "HTML nima?", o: ["Markup Language", "Programming Language", "Database"], a: 0 },
+                { q: "Python da o'zgaruvchi e'lon qilish?", o: ["x = 5", "var x = 5", "int x = 5"], a: 0 },
+                { q: "Loop nima?", o: ["Takrorlanish", "Funksiya", "O'zgaruvchi"], a: 0 }
+            ],
+            'database': [
+                { q: "SQL nima?", o: ["Structured Query Language", "Simple Query Language"], a: 0 },
+                { q: "Primary key nima?", o: ["Asosiy kalit", "Tashqi kalit"], a: 0 }
+            ],
+            'networking': [
+                { q: "IP manzil nima?", o: ["Internet Protocol Address", "Internal Protocol"], a: 0 },
+                { q: "HTTP porti?", o: ["80", "443", "21"], a: 0 }
+            ],
+            'webdev': [
+                { q: "CSS nima uchun ishlatiladi?", o: ["Dizayn", "Mantiq", "Ma'lumotlar"], a: 0 },
+                { q: "JavaScript qayerda ishlaydi?", o: ["Brauzerda", "Serverda", "Ikkalasida ham"], a: 2 }
+            ],
+            'english': [
+                { q: "I ___ a student", o: ["am", "is", "are"], a: 0 },
+                { q: "She ___ to school", o: ["go", "goes", "going"], a: 1 },
+                { q: "Past tense of 'go'?", o: ["went", "gone", "going"], a: 0 }
+            ],
+            'russian': [
+                { q: "Я ___ студент", o: ["есть", "быть", "был"], a: 0 },
+                { q: "Здравствуйте - bu nima?", o: ["Salom", "Xayr", "Rahmat"], a: 0 }
+            ],
+            'uzbek': [
+                { q: "O'zbek tilida nechta unli harf bor?", o: ["6", "8", "10"], a: 0 },
+                { q: "'Salom' so'zi qaysi tildan?", o: ["Arab", "Fors", "Turk"], a: 0 }
+            ],
+            'history': [
+                { q: "O'zbekiston mustaqillikka qachon erishgan?", o: ["1991", "1990", "1992"], a: 0 },
+                { q: "Amir Temur qachon tug'ilgan?", o: ["1336", "1400", "1300"], a: 0 }
+            ],
+            'geography': [
+                { q: "Eng katta okean?", o: ["Tinch", "Atlantika", "Hind"], a: 0 },
+                { q: "O'zbekistonning poytaxti?", o: ["Toshkent", "Samarqand", "Buxoro"], a: 0 }
+            ],
+            'literature': [
+                { q: "Alisher Navoiy asari?", o: ["Xamsa", "Alpomish", "Rustam"], a: 0 },
+                { q: "'Boburnoma' muallifi?", o: ["Zahiriddin Muhammad Bobur", "Alisher Navoiy"], a: 0 }
+            ],
+            'economics': [
+                { q: "Inflyatsiya nima?", o: ["Narxlarning oshishi", "Narxlarning tushishi"], a: 0 },
+                { q: "BVP nima?", o: ["Yalpi ichki mahsulot", "Yalpi milliy mahsulot"], a: 0 }
+            ]
+        };
+
+        let currentSubject = '';
+        let currentDifficulty = '';
+        let currentQuestion = 0;
+        let quizScore = 0;
+        let correctAnswers = 0;
+        let quizTimer = null;
+        let timeRemaining = 0;
+        let startTime = 0;
+
+        // Subject search
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('subjectSearch');
+            if (searchInput) {
+                searchInput.addEventListener('input', function (e) {
+                    const search = e.target.value.toLowerCase();
+                    document.querySelectorAll('.quiz-subject-card').forEach(card => {
+                        const name = card.querySelector('.subject-name').textContent.toLowerCase();
+                        card.style.display = name.includes(search) ? 'block' : 'none';
+                    });
+                });
+            }
+        });
+
+        function selectSubject(subject) {
+            currentSubject = subject;
+            document.getElementById('quiz-subjects').style.display = 'none';
+            document.getElementById('quiz-difficulty').style.display = 'block';
+        }
+
+        function showSubjects() {
+            document.getElementById('quiz-subjects').style.display = 'block';
+            document.getElementById('quiz-difficulty').style.display = 'none';
+            document.getElementById('quiz-game').style.display = 'none';
+            document.getElementById('quiz-result').style.display = 'none';
+        }
+
+        function startQuiz(difficulty) {
+            currentDifficulty = difficulty;
+            currentQuestion = 0;
+            quizScore = 0;
+            correctAnswers = 0;
+
+            // Set time based on difficulty
+            const times = { easy: 300, medium: 480, hard: 720 }; // seconds
+            timeRemaining = times[difficulty];
+            startTime = Date.now();
+
+            document.getElementById('quiz-difficulty').style.display = 'none';
+            document.getElementById('quiz-game').style.display = 'block';
+
+            // Set total questions
+            const totals = { easy: 10, medium: 15, hard: 20 };
+            document.getElementById('quizTotal').textContent = totals[difficulty];
+
+            // Start timer
+            startQuizTimer();
+
+            // Load first question
+            loadQuestion();
+        }
+
+        function startQuizTimer() {
+            updateTimerDisplay();
+            quizTimer = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    clearInterval(quizTimer);
+                    endQuiz();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            document.getElementById('timerDisplay').textContent =
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function loadQuestion() {
+            const questions = quizData[currentSubject] || quizData['math'];
+            const question = questions[currentQuestion % questions.length];
+
+            if (!question) {
+                endQuiz();
+                return;
+            }
+
+            // Update UI
+            document.getElementById('quizQuestion').textContent = question.q;
+            document.getElementById('quizQNum').textContent = currentQuestion + 1;
+            document.getElementById('quizSubjectBadge').textContent = currentSubject.toUpperCase();
+
+            // Update progress bar
+            const totals = { easy: 10, medium: 15, hard: 20 };
+            const progress = ((currentQuestion + 1) / totals[currentDifficulty]) * 100;
+            document.getElementById('quizProgress').style.width = progress + '%';
+
+            // Render options
+            const optionsDiv = document.getElementById('quizOptions');
+            optionsDiv.innerHTML = '';
+            question.o.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'quiz-option';
+                optionDiv.textContent = option;
+                optionDiv.onclick = () => checkAnswer(index, question.a, optionDiv);
+                optionsDiv.appendChild(optionDiv);
+            });
+
+            // Update score display
+            document.getElementById('quizScore').textContent = quizScore;
+            document.getElementById('quizCorrect').textContent = correctAnswers;
+        }
+
+        function checkAnswer(selected, correct, element) {
+            // Prevent multiple clicks
+            const allOptions = document.querySelectorAll('.quiz-option');
+            allOptions.forEach(opt => opt.style.pointerEvents = 'none');
+
+            if (selected === correct) {
+                element.classList.add('correct');
+                quizScore += 10;
+                correctAnswers++;
+            } else {
+                element.classList.add('wrong');
+                // Show correct answer
+                allOptions[correct].classList.add('correct');
+            }
+
+            // Update score
+            document.getElementById('quizScore').textContent = quizScore;
+            document.getElementById('quizCorrect').textContent = correctAnswers;
+
+            // Next question after delay
+            setTimeout(() => {
+                currentQuestion++;
+                const totals = { easy: 10, medium: 15, hard: 20 };
+                if (currentQuestion >= totals[currentDifficulty]) {
+                    endQuiz();
+                } else {
+                    loadQuestion();
+                }
+            }, 1500);
+        }
+
+        function endQuiz() {
+            clearInterval(quizTimer);
+
+            document.getElementById('quiz-game').style.display = 'none';
+            document.getElementById('quiz-result').style.display = 'block';
+
+            const totals = { easy: 10, medium: 15, hard: 20 };
+            const total = totals[currentDifficulty];
+            const percentage = Math.round((correctAnswers / total) * 100);
+            const wrong = total - correctAnswers;
+
+            // Calculate time taken
+            const timeTaken = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(timeTaken / 60);
+            const seconds = timeTaken % 60;
+
+            // Update result display
+            document.getElementById('finalScore').textContent = correctAnswers;
+            document.getElementById('finalTotal').textContent = total;
+            document.getElementById('resultPercentage').textContent = percentage + '%';
+            document.getElementById('resultCorrect').textContent = correctAnswers;
+            document.getElementById('resultWrong').textContent = wrong;
+            document.getElementById('resultTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+            // Set result icon based on performance
+            const resultIcon = document.getElementById('resultIcon');
+            if (percentage >= 90) {
+                resultIcon.textContent = '🏆';
+            } else if (percentage >= 70) {
+                resultIcon.textContent = '🎉';
+            } else if (percentage >= 50) {
+                resultIcon.textContent = '👍';
+            } else {
+                resultIcon.textContent = '📚';
+            }
+        }
+
+        function exitQuiz() {
+            if (confirm('Testdan chiqmoqchimisiz? Natijangiz saqlanmaydi.')) {
+                clearInterval(quizTimer);
+                showSubjects();
+            }
+        }
+
+        function restartQuiz() {
+            document.getElementById('quiz-result').style.display = 'none';
+            document.getElementById('quiz-difficulty').style.display = 'block';
+        }
+
+        function openQuiz() {
+            switchTab('quiz');
+            showSubjects();
+        }
+
+        // --- RANK LOGIC ---
+        function openRank() { switchTab('rank'); const l = document.getElementById('rankList'); const r = urlParams.get('rank'); if (!r) { l.innerHTML = 'Empty'; return; } l.innerHTML = ''; r.split('|').forEach((s, i) => { const [n, sc] = s.split(':'); l.innerHTML += `<div class="rank-item"><span>#${i + 1} ${n}</span><span class="rank-score">${sc}</span></div>`; }); }
+
+        // --- CORE ---
+        let tempImage = null;
+        function processImage(inp, pid) { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { const i = new Image(); i.onload = () => { const c = document.createElement('canvas'), x = c.getContext('2d'); c.width = i.width; c.height = i.height; x.drawImage(i, 0, 0); tempImage = c.toDataURL('image/jpeg', 0.5); document.getElementById(pid).src = tempImage; document.getElementById(pid).style.display = 'block'; }; i.src = e.target.result; }; r.readAsDataURL(f); }
+        function saveProfile() { const n = document.getElementById('editName').value; const c = JSON.parse(localStorage.getItem('pData') || '{}'); localStorage.setItem('pData', JSON.stringify({ n: n, i: tempImage || c.i })); startApp(); closeModal('profileModal'); }
+        function switchTab(t) {
+            document.querySelectorAll('.section').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+            document.getElementById(t + '-section').classList.add('active');
+            const activeNav = document.querySelector(`[data-tab="${t}"]`);
+            if (activeNav) activeNav.classList.add('active');
+            if (t === 'deadlines') loadDeadlines();
+            if (t === 'admin') loadAdminStats();
+        }
+
+        function loadAdminStats() {
+            // Parse URL parameters to get stats if available
+            const urlParams = new URLSearchParams(window.location.search);
+            const statsParam = urlParams.get('stats');
+
+            if (statsParam) {
+                try {
+                    // Format: total:premium
+                    const [total, premium] = statsParam.split(':');
+                    document.getElementById('adminTotalUsers').innerText = total || '-';
+                    document.getElementById('adminPremiumUsers').innerText = premium || '-';
+                } catch (e) {
+                    console.error('Stats parse error:', e);
+                }
+            }
+        }
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        function loadHabits() { document.getElementById('habitList').innerHTML = JSON.parse(localStorage.getItem('hList') || '[]').map(h => `<div class="habit-item"><span>${h.n}</span><span>✔</span></div>`).join('') || 'Bo\'sh'; }
+        function addHabit() { const n = document.getElementById('newHabitName').value; const l = JSON.parse(localStorage.getItem('hList') || '[]'); l.push({ n }); localStorage.setItem('hList', JSON.stringify(l)); closeModal('habitModal'); loadHabits(); }
+        function sendBroadcast() {
+            const text = document.getElementById('broadcastText').value.trim();
+            if (!text) {
+                document.getElementById('broadcastStatus').innerHTML = '❌ Xabar bo\'sh bo\'lishi mumkin emas!';
+                document.getElementById('broadcastStatus').style.color = 'var(--danger)';
+                return;
+            }
+            document.getElementById('broadcastStatus').innerHTML = '⏳ Yuborilmoqda...';
+            document.getElementById('broadcastStatus').style.color = 'var(--accent-primary)';
+            tg.sendData(JSON.stringify({ action: "admin_broadcast", text: text }));
+            setTimeout(() => {
+                document.getElementById('broadcastStatus').innerHTML = '✅ Xabar yuborildi!';
+                document.getElementById('broadcastStatus').style.color = 'var(--success)';
+                setTimeout(() => closeModal('broadcastModal'), 1500);
+            }, 500);
+        }
+
+        function givePremium() {
+            const userId = document.getElementById('premUserId').value.trim();
+            const days = document.getElementById('premDays').value.trim();
+
+            if (!userId || !days) {
+                document.getElementById('premiumStatus').innerHTML = '❌ Barcha maydonlarni to\'ldiring!';
+                document.getElementById('premiumStatus').style.color = 'var(--danger)';
+                return;
+            }
+
+            if (isNaN(userId) || isNaN(days)) {
+                document.getElementById('premiumStatus').innerHTML = '❌ Faqat raqam kiriting!';
+                document.getElementById('premiumStatus').style.color = 'var(--danger)';
+                return;
+            }
+
+            document.getElementById('premiumStatus').innerHTML = '⏳ Berilmoqda...';
+            document.getElementById('premiumStatus').style.color = 'var(--accent-primary)';
+            tg.sendData(JSON.stringify({ action: "admin_premium", target_id: userId, days: days }));
+            setTimeout(() => {
+                document.getElementById('premiumStatus').innerHTML = `✅ ${userId} ga ${days} kun Premium berildi!`;
+                document.getElementById('premiumStatus').style.color = 'var(--success)';
+                setTimeout(() => {
+                    closeModal('premiumAdminModal');
+                    document.getElementById('premUserId').value = '';
+                    document.getElementById('premDays').value = '30';
+                }, 1500);
+            }, 500);
+        }
+
+        function giveBonusAll() {
+            const days = document.getElementById('bonusDays').value.trim();
+
+            if (!days || isNaN(days)) {
+                document.getElementById('bonusStatus').innerHTML = '❌ To\'g\'ri kun soni kiriting!';
+                document.getElementById('bonusStatus').style.color = 'var(--danger)';
+                return;
+            }
+
+            if (!confirm(`Haqiqatan ham barcha foydalanuvchilarga ${days} kun bonus berasizmi?`)) {
+                return;
+            }
+
+            document.getElementById('bonusStatus').innerHTML = '⏳ Berilmoqda...';
+            document.getElementById('bonusStatus').style.color = 'var(--accent-primary)';
+            tg.sendData(JSON.stringify({ action: "admin_bonus_all", days: days }));
+            setTimeout(() => {
+                document.getElementById('bonusStatus').innerHTML = `✅ Hammaga ${days} kun bonus berildi!`;
+                document.getElementById('bonusStatus').style.color = 'var(--success)';
+                setTimeout(() => closeModal('bonusAllModal'), 1500);
+            }, 500);
+        }
+
+        // Calculator Functions
+        let calcValue = '0';
+        function calcBtn(v) {
+            if (calcValue === '0') calcValue = v;
+            else calcValue += v;
+            document.getElementById('calcDisplay').value = calcValue;
+        }
+        function calcEval() {
+            try {
+                calcValue = eval(calcValue).toString();
+                document.getElementById('calcDisplay').value = calcValue;
+            } catch { calcValue = 'Error'; document.getElementById('calcDisplay').value = calcValue; }
+        }
+        function calcClear() {
+            calcValue = '0';
+            document.getElementById('calcDisplay').value = calcValue;
+        }
+
+        // Schedule Functions
+        function loadSchedule() {
+            const list = JSON.parse(localStorage.getItem('schedule') || '[]');
+            const days = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba'];
+            let html = '';
+            days.forEach(day => {
+                const dayClasses = list.filter(c => c.day === day);
+                if (dayClasses.length > 0) {
+                    html += `<div class="card" style="margin-bottom:10px;"><h3 style="font-size:14px; margin-bottom:8px;">${day}</h3>`;
+                    dayClasses.forEach(c => {
+                        html += `<div style="background:rgba(88,101,242,0.1); padding:10px; border-radius:8px; margin-bottom:5px; display:flex; justify-content:space-between;">
+                            <div><b>${c.subject}</b><br><small style="color:var(--text-muted);">${c.time} | Xona: ${c.room}</small></div>
+                            <button onclick="deleteSchedule('${c.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">×</button>
+                        </div>`;
+                    });
+                    html += '</div>';
+                }
+            });
+            document.getElementById('scheduleList').innerHTML = html || '<p style="color:var(--text-muted);">Jadval bo\'sh</p>';
+        }
+        function addSchedule() {
+            const day = document.getElementById('scheduleDay').value;
+            const subject = document.getElementById('scheduleSubject').value.trim();
+            const time = document.getElementById('scheduleTime').value.trim();
+            const room = document.getElementById('scheduleRoom').value.trim();
+            if (!subject || !time || !room) return;
+            const list = JSON.parse(localStorage.getItem('schedule') || '[]');
+            list.push({ id: Date.now().toString(), day, subject, time, room });
+            localStorage.setItem('schedule', JSON.stringify(list));
+            document.getElementById('scheduleSubject').value = '';
+            document.getElementById('scheduleTime').value = '';
+            document.getElementById('scheduleRoom').value = '';
+            closeModal('scheduleModal');
+            loadSchedule();
+        }
+        function deleteSchedule(id) {
+            let list = JSON.parse(localStorage.getItem('schedule') || '[]');
+            list = list.filter(c => c.id !== id);
+            localStorage.setItem('schedule', JSON.stringify(list));
+            loadSchedule();
+        }
+
+        // Notes Functions
+        function loadNotes() {
+            const list = JSON.parse(localStorage.getItem('notes') || '[]');
+            let html = list.map(n => `<div class="card" style="margin-bottom:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div style="flex:1;"><h3 style="font-size:14px; margin-bottom:5px;">${n.title}</h3>
+                    <p style="color:var(--text-muted); font-size:13px;">${n.text}</p></div>
+                    <button onclick="deleteNote('${n.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:20px;">×</button>
+                </div></div>`).join('');
+            document.getElementById('notesList').innerHTML = html || '<p style="color:var(--text-muted);">Eslatma yo\'q</p>';
+        }
+        function addNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const text = document.getElementById('noteText').value.trim();
+            if (!title || !text) return;
+            const list = JSON.parse(localStorage.getItem('notes') || '[]');
+            list.push({ id: Date.now().toString(), title, text });
+            localStorage.setItem('notes', JSON.stringify(list));
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteText').value = '';
+            closeModal('noteModal');
+            loadNotes();
+        }
+        function deleteNote(id) {
+            let list = JSON.parse(localStorage.getItem('notes') || '[]');
+            list = list.filter(n => n.id !== id);
+            localStorage.setItem('notes', JSON.stringify(list));
+            loadNotes();
+        }
+
+        // Progress Functions
+        function loadProgress() {
+            const data = JSON.parse(localStorage.getItem('progress') || '{"hours":0,"tasks":0}');
+            document.getElementById('studyHours').innerText = data.hours || 0;
+            document.getElementById('completedTasks').innerText = data.tasks || 0;
+
+            const quotes = [
+                "Muvaffaqiyat - bu kichik sa'y-harakatlarning har kuni takrorlanishi.",
+                "Bilim - eng yaxshi investitsiya.",
+                "Har bir katta ish kichik qadamlardan boshlanadi.",
+                "O'qish - kelajakka sarmoya.",
+                "Bugun o'rganganingiz ertaga sizning kuchingiz."
+            ];
+            document.getElementById('motivationQuote').innerText = `"${quotes[Math.floor(Math.random() * quotes.length)]}"`;
+        }
+
+        // Goals Functions
+        let currentGoalType = 'short';
+        function loadGoals() {
+            const goals = JSON.parse(localStorage.getItem('goals') || '{"short":[],"long":[]}');
+
+            // Short term goals
+            let shortHtml = goals.short.map(g => {
+                const progress = (g.completed / g.total) * 100 || 0;
+                return `<div style="background:rgba(241,196,15,0.1); padding:10px; border-radius:8px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <b style="font-size:13px;">${g.title}</b>
+                        <button onclick="deleteGoal('short','${g.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">×</button>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2); height:6px; border-radius:3px; overflow:hidden;">
+                        <div style="background:var(--warning); height:100%; width:${progress}%;"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:5px; font-size:11px; color:var(--text-muted);">
+                        <span>${g.deadline || 'Muddat yo\'q'}</span>
+                        <span>${Math.round(progress)}%</span>
+                    </div>
+                    <button onclick="updateGoalProgress('short','${g.id}')" class="btn btn-outline" style="width:100%; margin-top:5px; padding:3px; font-size:11px;">Progress +</button>
+                </div>`;
+            }).join('');
+            document.getElementById('shortGoalsList').innerHTML = shortHtml || '<p style="color:var(--text-muted); font-size:12px;">Maqsad yo\'q</p>';
+
+            // Long term goals
+            let longHtml = goals.long.map(g => {
+                const progress = (g.completed / g.total) * 100 || 0;
+                return `<div style="background:rgba(155,89,182,0.1); padding:10px; border-radius:8px; margin-bottom:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <b style="font-size:13px;">${g.title}</b>
+                        <button onclick="deleteGoal('long','${g.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">×</button>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2); height:6px; border-radius:3px; overflow:hidden;">
+                        <div style="background:#9b59b6; height:100%; width:${progress}%;"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:5px; font-size:11px; color:var(--text-muted);">
+                        <span>${g.deadline || 'Muddat yo\'q'}</span>
+                        <span>${Math.round(progress)}%</span>
+                    </div>
+                    <button onclick="updateGoalProgress('long','${g.id}')" class="btn btn-outline" style="width:100%; margin-top:5px; padding:3px; font-size:11px;">Progress +</button>
+                </div>`;
+            }).join('');
+            document.getElementById('longGoalsList').innerHTML = longHtml || '<p style="color:var(--text-muted); font-size:12px;">Maqsad yo\'q</p>';
+        }
+        function addGoal() {
+            const title = document.getElementById('goalTitle').value.trim();
+            const deadline = document.getElementById('goalDeadline').value;
+            if (!title) return;
+            const goals = JSON.parse(localStorage.getItem('goals') || '{"short":[],"long":[]}');
+            goals[currentGoalType].push({ id: Date.now().toString(), title, deadline, completed: 0, total: 100 });
+            localStorage.setItem('goals', JSON.stringify(goals));
+            document.getElementById('goalTitle').value = '';
+            document.getElementById('goalDeadline').value = '';
+            closeModal('goalModal');
+            loadGoals();
+        }
+        function updateGoalProgress(type, id) {
+            const goals = JSON.parse(localStorage.getItem('goals') || '{"short":[],"long":[]}');
+            const goal = goals[type].find(g => g.id === id);
+            if (goal && goal.completed < goal.total) {
+                goal.completed += 10;
+                localStorage.setItem('goals', JSON.stringify(goals));
+                loadGoals();
+            }
+        }
+        function deleteGoal(type, id) {
+            const goals = JSON.parse(localStorage.getItem('goals') || '{"short":[],"long":[]}');
+            goals[type] = goals[type].filter(g => g.id !== id);
+            localStorage.setItem('goals', JSON.stringify(goals));
+            loadGoals();
+        }
+
+        // Study Plan Functions
+        function loadStudyPlan() {
+            const plans = JSON.parse(localStorage.getItem('studyPlan') || '[]');
+            let html = plans.map(p => {
+                const topics = p.topics.split('\n').filter(t => t.trim());
+                const completed = topics.filter((_, i) => p.completedTopics?.includes(i)).length;
+                const progress = (completed / topics.length) * 100 || 0;
+                const daysLeft = p.examDate ? Math.ceil((new Date(p.examDate) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
+
+                return `<div class="card" style="margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div>
+                            <h3 style="font-size:14px; margin:0;">${p.subject}</h3>
+                            <small style="color:var(--text-muted);">${p.examDate ? `Imtihon: ${p.examDate} (${daysLeft} kun)` : 'Muddat yo\'q'}</small>
+                        </div>
+                        <button onclick="deleteStudyPlan('${p.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:20px;">×</button>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.2); height:8px; border-radius:4px; overflow:hidden; margin-bottom:10px;">
+                        <div style="background:var(--accent-primary); height:100%; width:${progress}%;"></div>
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">${completed}/${topics.length} mavzu o'qildi (${Math.round(progress)}%)</div>
+                    ${topics.map((t, i) => `<div style="display:flex; align-items:center; gap:8px; padding:5px; background:rgba(88,101,242,0.05); border-radius:5px; margin-bottom:3px;">
+                        <input type="checkbox" ${p.completedTopics?.includes(i) ? 'checked' : ''} onchange="toggleTopic('${p.id}',${i})" style="cursor:pointer;">
+                        <span style="font-size:12px; ${p.completedTopics?.includes(i) ? 'text-decoration:line-through; color:var(--text-muted);' : ''}">${t}</span>
+                    </div>`).join('')}
+                </div>`;
+            }).join('');
+            document.getElementById('studyPlanList').innerHTML = html || '<p style="color:var(--text-muted);">Reja yo\'q</p>';
+        }
+        function addStudyPlan() {
+            const subject = document.getElementById('subjectName').value.trim();
+            const examDate = document.getElementById('examDate').value;
+            const topics = document.getElementById('subjectTopics').value.trim();
+            if (!subject || !topics) return;
+            const plans = JSON.parse(localStorage.getItem('studyPlan') || '[]');
+            plans.push({ id: Date.now().toString(), subject, examDate, topics, completedTopics: [] });
+            localStorage.setItem('studyPlan', JSON.stringify(plans));
+            document.getElementById('subjectName').value = '';
+            document.getElementById('examDate').value = '';
+            document.getElementById('subjectTopics').value = '';
+            closeModal('studyPlanModal');
+            loadStudyPlan();
+        }
+        function toggleTopic(planId, topicIndex) {
+            const plans = JSON.parse(localStorage.getItem('studyPlan') || '[]');
+            const plan = plans.find(p => p.id === planId);
+            if (!plan.completedTopics) plan.completedTopics = [];
+            if (plan.completedTopics.includes(topicIndex)) {
+                plan.completedTopics = plan.completedTopics.filter(i => i !== topicIndex);
+            } else {
+                plan.completedTopics.push(topicIndex);
+            }
+            localStorage.setItem('studyPlan', JSON.stringify(plans));
+            loadStudyPlan();
+        }
+        function deleteStudyPlan(id) {
+            let plans = JSON.parse(localStorage.getItem('studyPlan') || '[]');
+            plans = plans.filter(p => p.id !== id);
+            localStorage.setItem('studyPlan', JSON.stringify(plans));
+            loadStudyPlan();
+        }
+
+        // Budget Functions
+        function loadBudget() {
+            const expenses = JSON.parse(localStorage.getItem('budget') || '[]');
+            let income = 0, expense = 0;
+            expenses.forEach(e => {
+                if (e.type === 'income') income += parseFloat(e.amount);
+                else expense += parseFloat(e.amount);
+            });
+            document.getElementById('totalIncome').innerText = income.toLocaleString();
+            document.getElementById('totalExpense').innerText = expense.toLocaleString();
+            document.getElementById('balance').innerText = (income - expense).toLocaleString();
+
+            let html = expenses.map(e => `<div style="display:flex; justify-content:space-between; padding:8px; background:rgba(${e.type === 'income' ? '46,204,113' : '231,76,60'},0.1); border-radius:8px; margin-bottom:5px;">
+                <div style="flex:1;">
+                    <div style="font-size:13px; font-weight:bold;">${e.category}</div>
+                    <div style="font-size:11px; color:var(--text-muted);">${e.note || ''}</div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:14px; font-weight:bold; color:${e.type === 'income' ? 'var(--success)' : 'var(--danger)'};">${e.type === 'income' ? '+' : '-'}${parseFloat(e.amount).toLocaleString()}</div>
+                    <button onclick="deleteExpense('${e.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:12px;">×</button>
+                </div>
+            </div>`).join('');
+            document.getElementById('expensesList').innerHTML = html || '<p style="color:var(--text-muted); font-size:12px;">Xarajat yo\'q</p>';
+        }
+        function addExpense() {
+            const type = document.getElementById('expenseType').value;
+            const category = document.getElementById('expenseCategory').value;
+            const amount = document.getElementById('expenseAmount').value.trim();
+            const note = document.getElementById('expenseNote').value.trim();
+            if (!amount) return;
+            const expenses = JSON.parse(localStorage.getItem('budget') || '[]');
+            expenses.push({ id: Date.now().toString(), type, category, amount, note, date: new Date().toISOString().split('T')[0] });
+            localStorage.setItem('budget', JSON.stringify(expenses));
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseNote').value = '';
+            closeModal('expenseModal');
+            loadBudget();
+        }
+        function deleteExpense(id) {
+            let expenses = JSON.parse(localStorage.getItem('budget') || '[]');
+            expenses = expenses.filter(e => e.id !== id);
+            localStorage.setItem('budget', JSON.stringify(expenses));
+            loadBudget();
+        }
+
+        // Dark Mode
+        function toggleDarkMode() {
+            const root = document.documentElement;
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                root.style.setProperty('--bg-color', '#0d1117');
+                root.style.setProperty('--card-bg', 'rgba(23, 28, 36, 0.95)');
+                root.style.setProperty('--text-main', '#ffffff');
+                root.style.setProperty('--nav-bg', '#161b22');
+                document.getElementById('themeIcon').className = 'bi bi-moon-stars';
+                localStorage.setItem('darkMode', 'false');
+            } else {
+                root.style.setProperty('--bg-color', '#f0f2f5');
+                root.style.setProperty('--card-bg', '#ffffff');
+                root.style.setProperty('--text-main', '#1c1e21');
+                root.style.setProperty('--nav-bg', '#ffffff');
+                document.getElementById('themeIcon').className = 'bi bi-sun-fill';
+                localStorage.setItem('darkMode', 'true');
+            }
+        }
+
+        // Profile Functions
+        function loadProfile() {
+            const data = JSON.parse(localStorage.getItem('pData') || '{}');
+            const progress = JSON.parse(localStorage.getItem('progress') || '{"hours":0,"tasks":0}');
+            const goals = JSON.parse(localStorage.getItem('goals') || '{"short":[],"long":[]}');
+
+            // Calculate stats
+            const totalGoals = goals.short.length + goals.long.length;
+            const completedGoals = [...goals.short, ...goals.long].filter(g => g.completed >= g.total).length;
+            const streak = parseInt(localStorage.getItem('streak') || '0');
+            const points = (progress.hours * 10) + (progress.tasks * 5) + (streak * 20);
+
+            // Update profile page
+            document.getElementById('profileAvatar').src = data.i || document.getElementById('displayAvatar').src;
+            document.getElementById('profileName').innerText = data.n || tg.initDataUnsafe?.user?.first_name || 'User';
+            document.getElementById('profileUsername').innerText = '@' + (tg.initDataUnsafe?.user?.username || 'user');
+
+            // Update stats
+            const daysSinceJoin = Math.floor((Date.now() - (parseInt(localStorage.getItem('joinDate') || Date.now()))) / (1000 * 60 * 60 * 24));
+            document.getElementById('profileDaysCount').innerText = daysSinceJoin || 1;
+            document.getElementById('profileTasksCount').innerText = progress.tasks || 0;
+            document.getElementById('profileStreakCount').innerText = streak;
+            document.getElementById('profilePoints').innerText = points;
+
+            // Update home stats
+            document.getElementById('profileDays').innerText = daysSinceJoin || 1;
+            document.getElementById('profileTasks').innerText = progress.tasks || 0;
+            document.getElementById('profileStreak').innerText = streak;
+
+            // Update activity
+            document.getElementById('profileStudyTime').innerText = (progress.hours || 0) + ' soat';
+            document.getElementById('profileCompletedTasks').innerText = `${completedGoals}/${totalGoals}`;
+
+            // Update progress bars
+            const studyProgress = Math.min((progress.hours / 100) * 100, 100);
+            const taskProgress = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0;
+            document.getElementById('profileStudyBar').style.width = studyProgress + '%';
+            document.getElementById('profileTaskBar').style.width = taskProgress + '%';
+
+            // Update status badge
+            const isPremium = localStorage.getItem('isPremium') === 'true';
+            const statusBadge = isPremium ?
+                '<i class="bi bi-gem" style="color: #fbbf24;"></i> Premium User' :
+                '<i class="bi bi-star-fill" style="color: #fbbf24;"></i> Free User';
+            document.getElementById('userStatus').innerHTML = statusBadge;
+            document.getElementById('profileBadge').innerHTML = statusBadge;
+        }
+
+        async function loadBooks() { try { const r = await fetch('books.json?v=' + Date.now()); const b = await r.json(); document.getElementById('bookGrid').innerHTML = b.map(x => `<div class="book-card" onclick="openPdf('${x.url}','${x.title}')"><img src="${x.img}" class="book-cover"></div>`).join(''); } catch (e) { } }
+        function openPdf(u, t) { document.getElementById('pdfTitle').innerText = t; document.getElementById('pdfFrame').src = `https://docs.google.com/viewer?url=${encodeURIComponent(u)}&embedded=true`; document.getElementById('pdfViewer').style.display = 'flex'; }
+
+        function startApp() {
+            // Set join date if not exists
+            if (!localStorage.getItem('joinDate')) {
+                localStorage.setItem('joinDate', Date.now().toString());
+            }
+
+            const d = JSON.parse(localStorage.getItem('pData') || '{}');
+            document.getElementById('displayName').innerText = d.n || tg.initDataUnsafe?.user?.first_name || 'User';
+            document.getElementById('displayAvatar').src = d.i || `https://ui-avatars.com/api/?name=${d.n || 'U'}`;
+            document.getElementById('displayUsername').innerText = '@' + (tg.initDataUnsafe?.user?.username || 'user');
+
+            // Load all features
+            loadHabits(); loadBooks(); loadSchedule(); loadNotes(); loadProgress(); loadGoals(); loadStudyPlan(); loadBudget(); loadProfile();
+
+            if (window.location.hash) switchTab(window.location.hash.substring(1));
+
+            // Goal modal type detection
+            document.querySelectorAll('[data-type]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    currentGoalType = e.target.getAttribute('data-type') || e.target.closest('[data-type]').getAttribute('data-type');
+                });
+            });
+        }
+        startApp();
+
+    </script>
+</body>
+
+</html>

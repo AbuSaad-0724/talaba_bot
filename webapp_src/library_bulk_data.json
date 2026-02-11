@@ -1,0 +1,82 @@
+[
+  {
+    "subject": "Matematika",
+    "level": "Boshlang'ich",
+    "material_type": "pdf",
+    "title": "Algebra asoslari",
+    "url": "https://example.com/algebra.pdf",
+    "description": "Boshlang'ich algebra darsligi"
+  },
+  {
+    "subject": "Matematika",
+    "level": "O'rta",
+    "material_type": "video",
+    "title": "Geometriya asoslari",
+    "url": "https://example.com/geometry.mp4",
+    "description": "Geometriya asoslari video dars"
+  },
+  {
+    "subject": "Fizika",
+    "level": "Boshlang'ich",
+    "material_type": "pdf",
+    "title": "Mexanika kirish",
+    "url": "https://example.com/mechanics.pdf",
+    "description": "Mexanika asoslari"
+  },
+  {
+    "subject": "Fizika",
+    "level": "O'rta",
+    "material_type": "audio",
+    "title": "Optika asoslari",
+    "url": "https://example.com/optics.mp3",
+    "description": "Optika bo'yicha audio dars"
+  },
+  {
+    "subject": "Ingliz tili",
+    "level": "Boshlang'ich",
+    "material_type": "pdf",
+    "title": "Grammar Starter",
+    "url": "https://example.com/grammar.pdf",
+    "description": "Ingliz tili grammatikasi"
+  },
+  {
+    "subject": "Ingliz tili",
+    "level": "O'rta",
+    "material_type": "video",
+    "title": "Speaking Practice",
+    "url": "https://example.com/speaking.mp4",
+    "description": "Speaking mashg'ulotlari"
+  },
+  {
+    "subject": "Tarix",
+    "level": "Boshlang'ich",
+    "material_type": "pdf",
+    "title": "O'zbekiston tarixi",
+    "url": "https://example.com/uzb_history.pdf",
+    "description": "O'zbekiston tarixiga kirish"
+  },
+  {
+    "subject": "Tarix",
+    "level": "O'rta",
+    "material_type": "audio",
+    "title": "Jahon tarixi",
+    "url": "https://example.com/world_history.mp3",
+    "description": "Jahon tarixi audio dars"
+  },
+  {
+    "subject": "Kimyo",
+    "level": "Boshlang'ich",
+    "material_type": "pdf",
+    "title": "Kimyo asoslari",
+    "url": "https://example.com/chemistry.pdf",
+    "description": "Kimyo asosiy tushunchalari"
+  },
+  {
+    "subject": "Kimyo",
+    "level": "O'rta",
+    "material_type": "video",
+    "title": "Organik kimyo",
+    "url": "https://example.com/organic_chemistry.mp4",
+    "description": "Organik kimyo video dars"
+  }
+]

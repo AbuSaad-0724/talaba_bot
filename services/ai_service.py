@@ -1,81 +1,45 @@
-"""
-AI Service - Gemini API (BEPUL!)
-
-Bu fayl Gemini API'ni ishlatadi (OpenAI o'rniga)
-Afzalliklari:
-- 100% BEPUL (1,500 req/kun)
-- 2x tezroq
-- Vision bor
-- Yaxshi sifat
-"""
-
-from services.gemini_service import (
-    gemini_summarize,
-    gemini_generate_referat,
-    gemini_generate_test,
-    gemini_generate_ppt_content,
-    gemini_chat,
-    gemini_solve_homework,
-    gemini_check_essay,
-    gemini_generate_flashcards
-)
 import logging
+from services.multi_ai_service import multi_ai_generate
+from services.gemini_service import (
+    gemini_summarize, gemini_chat, gemini_solve_homework, gemini_generate_flashcards
+)
 
 logger = logging.getLogger(__name__)
 
-# ===== BASIC FUNCTIONS =====
-
 async def ai_summarize(text: str):
-    """Summarize text using Gemini"""
     return await gemini_summarize(text)
 
 async def ai_generate_referat(topic: str):
-    """Generate referat using Gemini"""
-    return await gemini_generate_referat(topic)
+    system = "Sen talabalarga referat yozishda yordam berasan. Matn chuqur va akademik uslubda bo'lsin. Mavzu bo'yicha kamida 5 ta bo'limdan iborat reja va batafsil matn tayyorla."
+    return await multi_ai_generate(f"Mavzu: {topic}", system, max_tokens=3500)
 
 async def ai_generate_test(topic: str, count: int = 5):
-    """Generate test using Gemini"""
-    return await gemini_generate_test(topic, count)
+    system = f"Berilgan mavzu bo'yicha aniq {count} ta test (MCQ) yarat. Har bir testda 4 ta variant (A, B, C, D) bo'lsin va oxirida to'g'ri javoblarni ro'yxat ko'rinishida ko'rsat."
+    return await multi_ai_generate(f"Mavzu: {topic}", system, max_tokens=2000)
 
 async def ai_generate_ppt_content(topic: str):
-    """Generate presentation content using Gemini"""
-    return await gemini_generate_ppt_content(topic)
-
-# ===== PREMIUM FEATURES =====
+    system = "Sen professional prezentatsiya tayyorlovchi yordamchisan. Berilgan mavzu bo'yicha 7-10 ta slayddan iborat reja va har bir slayd uchun qisqa, mazmunli matn yozib ber. Har bir yangi slaydni '|||' belgisi bilan boshla. Format:\n||| Sarlavha\nMatn...\n||| Keyingi Sarlavha\nMatn..."
+    return await multi_ai_generate(f"Mavzu: {topic}", system, max_tokens=3000)
 
 async def ai_chat_tutor(user_message: str, chat_history: list = None):
-    """AI Tutor - Chat with context using Gemini"""
     return await gemini_chat(user_message, chat_history)
 
 async def ai_solve_homework(image_path: str):
-    """Homework Solver - Solve problems from image using Gemini Vision"""
     return await gemini_solve_homework(image_path)
 
 async def ai_check_essay(essay_text: str):
-    """Essay Checker using Gemini"""
-    return await gemini_check_essay(essay_text)
+    system = "Sen professional insho tekshiruvchisan. Berilgan matnni tahlil qilib: 1. Grammatika xatolarini top 2. Uslub va ifoda tavsiyalari ber 3. Umumiy baho ber (5 ball) 4. Yaxshilash yo'llarini ko'rsat."
+    return await multi_ai_generate(f"Insho:\n{essay_text}", system, max_tokens=1500)
 
 async def ai_generate_flashcards(topic: str, count: int = 10):
-    """Generate flashcards using Gemini"""
     return await gemini_generate_flashcards(topic, count)
 
-
-# ===== AUDIO TRANSCRIPTION (Removed to eliminate OpenAI costs) =====
-
 async def ai_transcribe_audio(file_path: str):
-    """
-    Audio transcription using Gemini (Multimodal)
-    """
     try:
-        from services.gemini_service import gemini_vision # Or a generic gemini_multimodal
-        # Re-using gemini_vision logic for audio if mime_type is set correctly
         import google.generativeai as genai
-        from config import GEMINI_API_KEY
-        
         with open(file_path, "rb") as f:
             audio_data = f.read()
-        
-        model = genai.GenerativeModel('models/gemini-2.5-flash-lite')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content([
             "Ushbu audio faylni so'zma-so'z matnga aylantirib ber (transkripsiya).",
             {"mime_type": "audio/mpeg", "data": audio_data}
@@ -84,4 +48,3 @@ async def ai_transcribe_audio(file_path: str):
     except Exception as e:
         logger.error(f"Audio Transcription Error: {e}")
         return "Audio faylni tahlil qilishda xatolik yuz berdi."
-

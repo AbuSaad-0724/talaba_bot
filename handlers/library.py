@@ -3,15 +3,16 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from database import get_book_categories, get_books_by_category, get_book_by_id
 
 router = Router()
+from utils.texts import get_all_translations
 
-@router.message(F.text == "📚 Onlayn kutubxona")
-async def show_library_types(message: types.Message):
-    builder = InlineKeyboardBuilder()
-    builder.button(text="📄 PDF kutubxona", callback_data="lib_type_pdf")
-    builder.button(text="🎧 Audio kutubxona", callback_data="lib_type_audio")
-    builder.adjust(1)
-    
-    await message.answer("📚 **Kutubxona bo'limini tanlang:**", reply_markup=builder.as_markup(), parse_mode="Markdown")
+# @router.message(F.text.in_(get_all_translations('btn_library')))
+# async def show_library_types(message: types.Message):
+#     builder = InlineKeyboardBuilder()
+#     builder.button(text="📄 PDF kutubxona", callback_data="lib_type_pdf")
+#     builder.button(text="🎧 Audio kutubxona", callback_data="lib_type_audio")
+#     builder.adjust(1)
+#     
+#     await message.answer("📚 **Kutubxona bo'limini tanlang:**", reply_markup=builder.as_markup(), parse_mode="Markdown")
 
 @router.callback_query(F.data.startswith("lib_type_"))
 async def show_library_categories(callback: types.CallbackQuery):
