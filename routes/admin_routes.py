@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Body, Request, Response, Depends, File, UploadFile
+from fastapi import APIRouter, HTTPException, Query, Body, Request, Response, Depends, File, UploadFile, Form
 from pydantic import BaseModel
 from typing import List, Optional
 import json
@@ -14,7 +14,8 @@ from database import (
     log_analytics, get_analytics_stats, get_recent_activity,
     add_library_material, get_library_materials, delete_library_material,
     get_user, get_all_users, get_all_payments, update_payment_status,
-    update_user_premium, get_all_tg_ids, get_user_summary, set_setting, get_setting
+    update_user_premium, get_all_tg_ids, get_user_summary, set_setting, get_setting,
+    get_all_templates, add_template, delete_template
 )
 from utils.security import check_admin_auth
 import config
@@ -482,20 +483,67 @@ async def upload_file_admin(file: UploadFile = File(...)):
         UPLOAD_DIR = "webapp_src/uploads"
         os.makedirs(UPLOAD_DIR, exist_ok=True)
         
+        # Validate file type
+        allowed_extensions = {'.pdf', '.pptx', '.docx', '.doc', '.jpg', '.jpeg', '.png', '.mp4', '.zip'}
+        ext = os.path.splitext(file.filename)[1].lower()
+        
+        if ext not in allowed_extensions:
+            return {"status": "error", "message": f"Invalid file type. Allowed: {', '.join(allowed_extensions)}"}
+        
+        # Validate file size (max 50MB)
+        MAX_SIZE = 50 * 1024 * 1024
+        file_content = await file.read()
+        if len(file_content) > MAX_SIZE:
+            return {"status": "error", "message": "File too large. Maximum size is 50MB."}
+        
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{timestamp}_{file.filename}"
         file_path = os.path.join(UPLOAD_DIR, filename)
         
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(file_content)
             
         # Return URL relative to webapp
-        # Since access is via /static/ (mapped to webapp_src)
         file_url = f"/static/uploads/{filename}"
         
-        return {"status": "success", "url": file_url}
+        return {"status": "success", "url": file_url, "filename": filename}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+# --- Template Endpoints ---
+@router.get("/templates/list")
+async def list_templates_api():
+    templates = get_all_templates()
+    # row: id, name, category, file_path
+    mapped = []
+    for r in templates:
+        mapped.append({
+            "id": r[0], "name": r[1], "category": r[2], "path": r[3]
+        })
+    return {"templates": mapped}
+
+@router.post("/templates/delete")
+async def delete_template_api(data: dict = Body(...)):
+    tid = data.get("id")
+    if not tid: return {"status": "error"}
+    delete_template(int(tid))
+    return {"status": "success"}
+
+@router.post("/templates/upload")
+async def upload_template_api(
+    name: str = Form(...), 
+    category: str = Form(...), 
+    file: UploadFile = File(...)
+):
+    # Ensure directory exists
+    os.makedirs("data/templates", exist_ok=True)
+    
+    file_path = f"data/templates/{file.filename}"
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    
+    add_template(name, category, file_path)
+    return {"status": "success"}
 
 # --- Admins & Channels ---
 @router.get("/admins/list")

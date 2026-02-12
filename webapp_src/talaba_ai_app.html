@@ -1542,30 +1542,169 @@
         tg.ready();
         tg.expand();
 
+        // Get user data from Telegram
+        const tgUser = tg.initDataUnsafe?.user || { 
+            id: 0, 
+            first_name: 'Student', 
+            username: 'student' 
+        };
+
+        // API Configuration
+        const urlParams = new URLSearchParams(window.location.search);
+        let apiBase = urlParams.get('server');
+        if (!apiBase) {
+            apiBase = window.location.origin;
+        }
+        apiBase = apiBase.replace(/\/$/, '');
+        console.log('API Base:', apiBase);
+
+        // State
+        let userData = null;
+        let userTasks = [];
+
+        // API Helper
+        async function api(endpoint, method = 'GET', body = null) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            };
+            
+            try {
+                const res = await fetch(`${apiBase}${endpoint}`, {
+                    method,
+                    headers,
+                    body: body ? JSON.stringify(body) : null
+                });
+                
+                if (!res.ok) {
+                    throw new Error(`API Error: ${res.status}`);
+                }
+                
+                return await res.json();
+            } catch (e) {
+                console.error(`API Error (${endpoint}):`, e);
+                throw e;
+            }
+        }
+
+        // Initialize App with User Data
+        async function initApp() {
+            try {
+                // Update profile with Telegram user data
+                const profileName = document.querySelector('.profile-name');
+                if (profileName) {
+                    profileName.textContent = tgUser.first_name || 'Student';
+                }
+
+                // Update avatar
+                const avatarImg = document.querySelector('.avatar');
+                if (avatarImg) {
+                    avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tgUser.first_name || 'S')}&background=8b5cf6&color=fff`;
+                }
+
+                // Fetch user data from API
+                try {
+                    const data = await api('/api/user/' + tgUser.id);
+                    if (data.status === 'success') {
+                        userData = data.user;
+                        updateUserDisplay(userData);
+                    }
+                } catch (e) {
+                    console.log('Using local mock data');
+                }
+
+                // Fetch tasks
+                loadTasks();
+
+            } catch (error) {
+                console.error('App initialization error:', error);
+            }
+        }
+
+        function updateUserDisplay(user) {
+            // Update stats if user data available
+            const statValues = document.querySelectorAll('.stat-value');
+            if (statValues.length >= 3 && user) {
+                if (user.points) statValues[0].textContent = user.points;
+                if (user.completed_tasks !== undefined) statValues[1].textContent = user.completed_tasks;
+                if (user.streak) statValues[2].textContent = user.streak;
+            }
+
+            // Update premium status
+            const badge = document.querySelector('.profile-badge');
+            if (badge && user?.is_premium) {
+                badge.innerHTML = '<i class="bi bi-gem"></i> Premium';
+                badge.classList.add('premium');
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                const data = await api('/api/deadlines/' + tgUser.id);
+                if (data.status === 'success') {
+                    userTasks = data.deadlines || [];
+                    renderTasks();
+                }
+            } catch (e) {
+                console.log('Using mock task data');
+            }
+        }
+
+        function renderTasks() {
+            const deadlineCards = document.querySelectorAll('.deadline-card');
+            deadlineCards.forEach((card, index) => {
+                if (userTasks[index]) {
+                    const task = userTasks[index];
+                    const title = card.querySelector('.deadline-title');
+                    const subject = card.querySelector('.deadline-subject');
+                    const timer = card.querySelector('.deadline-timer');
+                    
+                    if (title) title.textContent = task.title;
+                    if (subject) subject.textContent = task.subject || 'General';
+                    if (timer) timer.innerHTML = '<i class="bi bi-clock-fill"></i> ' + (task.days_left || '1 kun');
+                }
+            });
+        }
+
         // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function () {
                 const page = this.getAttribute('data-page');
-
-                // Update nav items
                 document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
                 this.classList.add('active');
-
-                // Update pages
                 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                 document.getElementById(page + '-page').classList.add('active');
             });
         });
 
-        // AI Input
+        // AI Input - Real Implementation
         const aiInput = document.querySelector('.ai-input');
         const aiSendBtn = document.querySelector('.ai-send-btn');
 
-        aiSendBtn.addEventListener('click', function () {
+        async function sendAIMessage() {
             const message = aiInput.value.trim();
-            if (message) {
-                tg.showAlert(`AI: "${message}" - Bu funksiya tez orada qo'shiladi!`);
-                aiInput.value = '';
+            if (!message) return;
+
+            tg.showAlert('AI: Sending request for "' + message + '"...');
+
+            try {
+                const data = await api('/api/chat', 'POST', { prompt: message, user_id: tgUser.id });
+                if (data.status === 'success') {
+                    tg.showAlert('AI Response: ' + data.response.substring(0, 200) + '...');
+                    aiInput.value = '';
+                } else {
+                    tg.showAlert('Xatolik: ' + (data.message || 'Noma\'lum xato'));
+                }
+            } catch (e) {
+                tg.showAlert('Serverga ulanib bo\'lmadi. Iltimos, keyinroq urinib ko\'ring.');
+            }
+        }
+
+        aiSendBtn.addEventListener('click', sendAIMessage);
+        aiInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAIMessage();
             }
         });
 
@@ -1581,7 +1720,7 @@
         document.querySelectorAll('.ai-tool-card:not(.locked)').forEach(card => {
             card.addEventListener('click', function () {
                 const title = this.querySelector('.ai-tool-title').textContent;
-                tg.showAlert(`${title} ochilmoqda...`);
+                tg.showAlert(title + ' funksiyasi aktiv. AI chat orqali foydalaning!');
             });
         });
 
@@ -1595,7 +1734,7 @@
         // Premium Button
         document.querySelectorAll('.btn-premium').forEach(btn => {
             btn.addEventListener('click', function () {
-                tg.showAlert('Premium xarid qilish uchun botga murojaat qiling!');
+                window.location.href = 'premium_payment.html' + window.location.search;
             });
         });
 
@@ -1607,11 +1746,24 @@
             });
         });
 
+        // Settings Items
+        document.querySelectorAll('.settings-item').forEach(item => {
+            item.addEventListener('click', function () {
+                const title = this.querySelector('h4')?.textContent;
+                if (title) {
+                    tg.showAlert(title + ' sahifasi: Tez orada qo\'shiladi!');
+                }
+            });
+        });
+
         // Auto-resize textarea
         aiInput.addEventListener('input', function () {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
         });
+
+        // Initialize on load
+        initApp();
     </script>
 </body>
 
