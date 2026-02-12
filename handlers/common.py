@@ -106,10 +106,14 @@ def get_main_menu(user_id: int):
 
     # Web App Configuration
     lang = get_user_language(user_id) or 'uz'
-    base_url = get_setting("webapp_url", WEBAPP_URL or "https://abusaad-0724.github.io/talaba_wep/index.html")
     
+    # Auto-detect server URL if not set
     from config import SERVER_URL
-    server_param = f"&server={urllib.parse.quote(SERVER_URL)}" if SERVER_URL else ""
+    detected_url = SERVER_URL or os.environ.get("NGROK_URL", "") or "http://localhost:8080"
+    
+    # Use local server for admin panel
+    base_url = f"{detected_url.rstrip('/')}/static/admin_dashboard.html"
+    server_param = f"&server={urllib.parse.quote(detected_url)}" if detected_url else ""
 
     # Build full WebApp Dashboard URL
     full_url = f"{base_url}?lang={lang}{admin_params}{stats_param}{rank_param}{dl_param}{premium_param}{server_param}"
