@@ -1,144 +1,457 @@
 <!DOCTYPE html>
 <html lang="uz">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Talaba AI | Student Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Talaba AI - Student Assistant</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
-            --bg-dark: #0a0c12;
-            --bg-card: rgba(22, 28, 45, 0.7);
-            --bg-accent: #6366f1;
-            --bg-accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.08);
-            --glass: rgba(255, 255, 255, 0.03);
-            --radius-xl: 28px;
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: rgba(30, 30, 40, 0.8);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-light: #818cf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --border: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --radius: 12px;
             --radius-lg: 20px;
-            --radius-md: 14px;
-
-            /* Status Colors */
-            --color-ai: #a855f7;
-            --color-deadline: #ef4444;
-            --color-success: #10b981;
-            --color-premium: #fbbf24;
-            --color-blue: #3b82f6;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--bg-dark);
-            background-attachment: fixed;
-            color: var(--text-main);
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
-            padding-bottom: 90px;
-            /* Space for nav */
+            padding-bottom: 80px;
         }
 
-        /* Ambient Glow Backgrounds */
-        body::before {
-            content: '';
-            position: fixed;
-            top: -10%;
-            right: -10%;
-            width: 40%;
-            height: 40%;
-            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-            z-index: -1;
-            pointer-events: none;
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, transparent 100%);
+            padding: 16px 20px 32px;
         }
 
-        body::after {
-            content: '';
-            position: fixed;
-            bottom: -10%;
-            left: -10%;
-            width: 40%;
-            height: 40%;
-            background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        /* Global Components */
-        .glass {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
-        }
-
-        .container {
-            padding: 20px;
-            max-width: 600px;
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 480px;
             margin: 0 auto;
         }
 
-        .view {
-            display: none;
-            transform: translateY(10px);
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .view.active {
-            display: block;
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        h1 {
-            font-size: 26px;
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 700;
-            letter-spacing: -0.5px;
+            font-size: 18px;
         }
 
-        h2 {
-            font-size: 18px;
+        .user-details h2 {
+            font-size: 16px;
             font-weight: 600;
-            margin-bottom: 15px;
-            color: var(--text-main);
+        }
+
+        .user-details span {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .premium-badge {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: #000;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+
+        /* AI Chat Section */
+        .ai-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(20px);
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .ai-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .ai-input-wrapper {
+            position: relative;
+        }
+
+        .ai-input {
+            width: 100%;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 48px 14px 16px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            transition: var(--transition);
+        }
+
+        .ai-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .ai-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .ai-send-btn {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .ai-send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .quick-chip {
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quick-chip:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent);
+            color: var(--accent-light);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title a {
+            font-size: 12px;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* Tools Grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .tool-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .tool-card:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .tool-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .tool-name {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tool-card.premium {
+            border-color: rgba(251, 191, 36, 0.3);
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), transparent);
+        }
+
+        .tool-card.premium .tool-name {
+            color: var(--warning);
+        }
+
+        /* Deadlines */
+        .deadlines-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .deadline-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .deadline-item:active {
+            transform: scale(0.98);
+        }
+
+        .deadline-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .deadline-info span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .deadline-timer {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--danger);
+            white-space: nowrap;
+        }
+
+        .deadline-timer.warning {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: var(--warning);
+        }
+
+        .deadline-timer.safe {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: var(--success);
+        }
+
+        /* Premium Card */
+        .premium-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%);
+        }
+
+        .premium-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .premium-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .premium-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #fbbf24;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .subtitle {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 20px;
+        .premium-features {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
-        /* Navigation Bar */
-        .nav-bar {
+        .premium-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .premium-feature i {
+            color: var(--success);
+        }
+
+        .premium-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            border: none;
+            border-radius: var(--radius);
+            padding: 12px;
+            color: #000;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .premium-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
-            width: 100%;
-            height: 80px;
-            background: rgba(10, 12, 18, 0.9);
+            right: 0;
+            background: rgba(18, 18, 26, 0.95);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid var(--border);
+            padding: 12px 20px 24px;
             display: flex;
             justify-content: space-around;
-            align-items: center;
-            z-index: 1000;
-            padding: 0 10px 10px 10px;
+            z-index: 100;
         }
 
         .nav-item {
@@ -146,1391 +459,618 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            color: var(--text-muted);
-            font-size: 11px;
-            font-weight: 500;
-            transition: 0.3s;
+            padding: 8px 16px;
+            border-radius: 12px;
             cursor: pointer;
-            position: relative;
-            flex: 1;
+            transition: var(--transition);
+            color: var(--text-muted);
+        }
+
+        .nav-item.active {
+            color: var(--accent-light);
+            background: rgba(99, 102, 241, 0.15);
         }
 
         .nav-item i {
             font-size: 22px;
-            transition: 0.3s;
         }
 
-        .nav-item.active {
-            color: var(--bg-accent);
-        }
-
-        .nav-item.active i {
-            transform: translateY(-2px);
-        }
-
-        /* Central AI Button */
-        .nav-center {
-            margin-top: -35px;
-            width: 56px;
-            height: 56px;
-            border-radius: 50%;
-            background: var(--bg-accent-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
-            border: 4px solid var(--bg-dark);
-            transition: 0.3s;
-            color: white !important;
-            font-size: 26px;
-        }
-
-        .nav-center:active {
-            transform: scale(0.9);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
-        }
-
-        /* Home View Components */
-        .user-profile-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 25px;
-            margin-top: 10px;
-        }
-
-        .avatar-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--bg-accent-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 700;
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .plan-badge {
-            padding: 4px 10px;
-            border-radius: 20px;
+        .nav-item span {
             font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .plan-badge.free {
-            background: var(--glass);
-            color: var(--text-muted);
-        }
-
-        .plan-badge.premium {
-            background: rgba(251, 191, 36, 0.1);
-            color: var(--color-premium);
-            border-color: rgba(251, 191, 36, 0.2);
-        }
-
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            padding: 16px;
-            border-radius: var(--radius-lg);
-            background: var(--glass);
-            border: 1px solid var(--border);
-        }
-
-        .stat-card .val {
-            font-size: 20px;
-            font-weight: 700;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .stat-card .lbl {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        /* Quick Actions */
-        .action-row {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            scrollbar-width: none;
-        }
-
-        .action-row::-webkit-scrollbar {
-            display: none;
-        }
-
-        .action-btn {
-            flex: 0 0 auto;
-            padding: 12px 18px;
-            border-radius: 16px;
-            background: var(--glass);
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
             font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
         }
 
-        .action-btn:active {
-            background: rgba(255, 255, 255, 0.08);
-            transform: scale(0.96);
-        }
-
-        .action-btn i {
-            font-size: 18px;
-            color: var(--color-ai);
-        }
-
-        /* Deadline Cards */
-        .deadline-card {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 16px;
-            border-radius: var(--radius-lg);
-            background: var(--glass);
-            border: 1px solid var(--border);
-            margin-bottom: 12px;
-            position: relative;
-        }
-
-        .deadline-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 20%;
-            bottom: 20%;
-            width: 4px;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .deadline-card.urgent::before {
-            background: var(--color-deadline);
-        }
-
-        .deadline-card.warning::before {
-            background: var(--color-premium);
-        }
-
-        .deadline-info {
-            flex: 1;
-        }
-
-        .deadline-title {
-            font-weight: 600;
-            font-size: 15px;
-            margin-bottom: 2px;
-        }
-
-        .deadline-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .days-badge {
-            padding: 4px 8px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .days-badge.red {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--color-deadline);
-        }
-
-        .days-badge.orange {
-            background: rgba(251, 191, 36, 0.1);
-            color: var(--color-premium);
-        }
-
-        /* AI Chat View */
-        .chat-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-        }
-
-        .chat-ai-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: var(--bg-accent-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: white;
-        }
-
-        .chat-container {
-            height: calc(100vh - 190px);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .chat-history {
-            flex: 1;
-            overflow-y: auto;
-            padding: 5px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            scroll-behavior: smooth;
-        }
-
-        .chat-history::-webkit-scrollbar {
-            width: 0;
-        }
-
-        .msg {
-            max-width: 85%;
-            padding: 12px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            line-height: 1.6;
-            position: relative;
-        }
-
-        .msg.user {
-            align-self: flex-end;
-            background: var(--bg-accent);
-            color: white;
-            border-bottom-right-radius: 4px;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
-        }
-
-        .msg.ai {
-            align-self: flex-start;
-            background: var(--glass);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            border-bottom-left-radius: 4px;
-        }
-
-        .typing {
-            display: flex;
-            gap: 4px;
-            padding: 8px 0;
-        }
-
-        .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--text-muted);
-            animation: dotPulse 1.4s infinite ease-in-out;
-        }
-
-        .dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-
-        .dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
-        @keyframes dotPulse {
-
-            0%,
-            80%,
-            100% {
-                transform: scale(0.6);
-                opacity: 0.5;
-            }
-
-            40% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        .chat-input-wrapper {
-            position: fixed;
-            bottom: 90px;
-            left: 20px;
-            right: 20px;
-            max-width: 560px;
-            margin: 0 auto;
-            background: rgba(22, 28, 45, 0.95);
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 8px 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        .chat-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 15px;
-            outline: none;
-            padding: 10px 0;
-        }
-
-        .send-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background: var(--bg-accent);
-            color: white;
-            border: none;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .send-btn:active {
-            transform: scale(0.9);
-        }
-
-        /* Spinner */
-        .spinner-border {
+        /* Loading Spinner */
+        .spinner {
             width: 24px;
             height: 24px;
             border: 2px solid var(--border);
-            border-top-color: var(--bg-accent);
+            border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            display: inline-block;
+            margin: 20px auto;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
-        /* Library View */
-        .search-bar {
-            width: 100%;
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .search-bar input {
-            background: transparent;
-            border: none;
-            color: white;
-            flex: 1;
-            outline: none;
-            font-size: 14px;
-        }
-
-        .search-bar i {
-            color: var(--text-muted);
-        }
-
-        .lib-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .lib-item {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .lib-item:active {
-            transform: scale(0.97);
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .lib-icon {
-            font-size: 30px;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        /* Planner View */
-        .calendar-strip {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            background: var(--glass);
-            padding: 15px;
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--border);
-        }
-
-        .cal-day {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            width: 40px;
-            padding: 8px 0;
-            border-radius: 12px;
-            transition: 0.3s;
-        }
-
-        .cal-day.active {
-            background: var(--bg-accent);
-            color: white;
-        }
-
-        .cal-day .day-name {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: var(--text-muted);
-        }
-
-        .cal-day.active .day-name {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .cal-day .day-num {
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
+        /* Toast Notifications */
+        .toast {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            width: 100%;
-            max-width: 400px;
-            background: #1e293b;
-            border-radius: 24px;
-            padding: 25px;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            animation: modalScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: var(--radius);
+            padding: 12px 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 200;
+            max-width: 90%;
         }
 
-        @keyframes modalScale {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
         }
 
-        .modal-header {
+        .toast.error {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .toast.success {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: var(--bg-glass);
+            border-radius: var(--radius);
+            width: fit-content;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-8px); opacity: 1; }
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-bottom: 24px;
+        }
+
+        .progress-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            color: var(--text-muted);
             margin-bottom: 8px;
         }
 
-        .input-group input,
-        .input-group select {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            color: white;
-            outline: none;
-            font-family: inherit;
-        }
-
-        .planner-task-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 16px;
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            margin-bottom: 10px;
-        }
-
-        .planner-task-item input[type="radio"] {
-            width: 20px;
-            height: 20px;
-            accent-color: var(--bg-accent);
-        }
-
-        .planner-task-info {
-            flex: 1;
-        }
-
-        .delete-task-btn {
-            color: #ef4444;
-            opacity: 0.6;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        /* Profile View */
-        .profile-card-new {
-            text-align: center;
-            padding: 30px 20px;
-            border-radius: 24px;
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.8));
-            margin-bottom: 25px;
-            border: 1px solid var(--border);
-        }
-
-        .profile-avatar-lg {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 4px solid var(--border);
-            background: var(--bg-accent-gradient);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            font-weight: 700;
-            margin: 0 auto 15px;
-            position: relative;
-        }
-
-        .edit-icon {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: var(--bg-accent);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .progress-label {
             font-size: 12px;
-            border: 2px solid var(--bg-dark);
+            color: var(--text-secondary);
         }
 
-        .upgrade-cta {
-            background: var(--bg-accent-gradient);
-            border-radius: 20px;
-            padding: 20px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-            margin-top: 15px;
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .upgrade-cta h3 {
-            font-size: 18px;
-            margin-bottom: 5px;
-        }
-
-        .upgrade-cta p {
+        .progress-value {
             font-size: 12px;
-            opacity: 0.9;
-            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--accent);
         }
 
-        .upgrade-btn {
-            background: white;
-            color: var(--bg-accent);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .settings-list {
-            background: var(--glass);
-            border-radius: 20px;
+        .progress-bar {
+            height: 6px;
+            background: var(--bg-glass);
+            border-radius: 3px;
             overflow: hidden;
-            border: 1px solid var(--border);
-            margin-top: 20px;
         }
 
-        .settings-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-        }
-
-        .settings-item:last-child {
-            border: none;
-        }
-
-        .settings-label {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-        }
-
-        .settings-label i {
-            font-size: 18px;
-            color: var(--text-muted);
-        }
-
-        /* Utility */
-        .mb-20 {
-            margin-bottom: 20px;
-        }
-
-        .mt-10 {
-            margin-top: 10px;
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            border-radius: 3px;
+            transition: width 0.5s ease;
         }
     </style>
 </head>
-
 <body>
-
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="nav-bar">
-        <div class="nav-item active" onclick="switchView('home', this)">
-            <i class="bi bi-house-door-fill"></i>
-            <span>Asosiy</span>
-        </div>
-        <div class="nav-item" onclick="switchView('planner', this)">
-            <i class="bi bi-calendar-event"></i>
-            <span>Reja</span>
-        </div>
-        <div class="nav-item" onclick="switchView('ai', this)">
-            <div class="nav-center"><i class="bi bi-stars"></i></div>
-            <span>Yordamchi</span>
-        </div>
-        <div class="nav-item" onclick="switchView('library', this)">
-            <i class="bi bi-collection"></i>
-            <span>Kutubxona</span>
-        </div>
-        <div class="nav-item" onclick="switchView('profile', this)">
-            <i class="bi bi-person"></i>
-            <span>Profil</span>
-        </div>
-    </nav>
-
-    <!-- VIEWS -->
-    <div class="container">
-
-        <!-- HOME VIEW -->
-        <div id="view-home" class="view active">
-            <div class="user-profile-header">
-                <div class="avatar-box">
-                    <div class="avatar" id="header-avatar">A</div>
-                    <div>
-                        <div style="font-size: 12px; color: var(--text-muted);">Assalomu alaykum</div>
-                        <div style="font-weight: 700; font-size: 16px;" id="header-name">Foydalanuvchi</div>
-                    </div>
-                </div>
-                <div class="plan-badge free" onclick="openPremium()" style="cursor:pointer">Free Plan</div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="val">8/15</span>
-                    <span class="lbl">AI So'rovlar</span>
-                </div>
-                <div class="stat-card">
-                    <span class="val">3 ta</span>
-                    <span class="lbl">Yaqin muddatlar</span>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="user-info">
+                <div class="avatar" id="user-avatar">A</div>
+                <div class="user-details">
+                    <h2 id="user-name">Talaba</h2>
+                    <span id="user-status">Free Plan</span>
                 </div>
             </div>
-
-            <h2><i class="bi bi-lightning-charge-fill" style="color:var(--color-premium)"></i> Tezkor AI</h2>
-            <div class="action-row">
-                <div class="action-btn" onclick="quickAI('Referat yozish')"><i class="bi bi-file-earmark-text"></i>
-                    Referat</div>
-                <div class="action-btn" onclick="quickAI('Taqdimot yaratish')"><i class="bi bi-display"></i> Taqdimot
-                </div>
-                <div class="action-btn" onclick="quickAI('Uy vazifasi')"><i class="bi bi-pencil-square"></i> Vazifa
-                </div>
-                <div class="action-btn" onclick="quickAI('O\'qish rejasi')"><i class="bi bi-book"></i> Plan</div>
-            </div>
-
-            <h2><i class="bi bi-clock-history" style="color:var(--color-deadline)"></i> Bugungi muddatlar</h2>
-            <div id="deadlines-summary">
-                <div class="deadline-card urgent">
-                    <div class="deadline-info">
-                        <div class="deadline-title">Matematika Kurs ishi</div>
-                        <div class="deadline-sub">Mavzu: Differensial tenglamalar</div>
-                    </div>
-                    <div class="days-badge red">2 kun</div>
-                </div>
-                <div class="deadline-card warning">
-                    <div class="deadline-info">
-                        <div class="deadline-title">Fizika Laboratoriya</div>
-                        <div class="deadline-sub">Elektr va Magnetizm</div>
-                    </div>
-                    <div class="days-badge orange">5 kun</div>
-                </div>
-                <button
-                    style="width:100%; padding:12px; background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:12px; font-size:13px;"
-                    onclick="switchView('planner')">Barchasi →</button>
+            <div class="premium-badge" id="premium-badge" style="display: none;">
+                <i class="bi bi-gem-fill"></i> PREMIUM
             </div>
         </div>
-
-        <!-- AI VIEW -->
-        <div id="view-ai" class="view">
-            <div class="chat-header">
-                <div class="chat-ai-icon"><i class="bi bi-robot"></i></div>
-                <div>
-                    <h1 style="font-size: 20px;">AI Yordamchi</h1>
-                    <div
-                        style="font-size: 12px; color: var(--color-success); display:flex; align-items:center; gap:4px;">
-                        <span style="width:6px; height:6px; background:var(--color-success); border-radius:50%;"></span>
-                        Onlayn
-                    </div>
-                </div>
-            </div>
-
-            <div class="chat-container">
-                <div class="chat-history" id="chat-history">
-                    <div class="msg ai">Salom! Men sizga o'qishda va boshqa vazifalarda yordam berishga tayyorman.
-                        Savolingizni bering!</div>
-                </div>
-                <div class="chat-input-wrapper">
-                    <input type="text" class="chat-input" id="chat-input" placeholder="Xabar yozing..."
-                        onkeypress="if(event.key==='Enter') sendChat()">
-                    <button class="send-btn" onclick="sendChat()"><i class="bi bi-send-fill"></i></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- PLANNER VIEW -->
-        <div id="view-planner" class="view">
-            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div>
-                    <h1>Rejalashtiruvchi</h1>
-                    <p class="subtitle">O'quv jarayonini tartibga soling</p>
-                </div>
-                <button class="send-btn" onclick="openModal('add-task-modal')"
-                    style="border-radius:15px; width:45px; height:45px;">
-                    <i class="bi bi-plus-lg"></i>
-                </button>
-            </div>
-
-            <div class="calendar-strip" id="calendar-strip">
-                <!-- Will be populated by JS -->
-            </div>
-
-            <h2>Vazifalar ro'yxati</h2>
-            <div id="planner-tasks-list" style="margin-bottom: 20px;">
-                <div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;">
-                    <i class="bi bi-clipboard-x"
-                        style="display:block; font-size:32px; margin-bottom:10px; opacity:0.3;"></i>
-                    Vazifalar topilmadi
-                </div>
-            </div>
-        </div>
-
-        <!-- MODALS -->
-        <div id="add-task-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2 style="margin:0">Yangi vazifa</h2>
-                    <i class="bi bi-x-lg" style="cursor:pointer" onclick="closeModal('add-task-modal')"></i>
-                </div>
-                <div class="input-group">
-                    <label>Vazifa nomi</label>
-                    <input type="text" id="task-title" placeholder="Masalan: Matematika mustaqil ish">
-                </div>
-                <div class="input-group">
-                    <label>Muddat (Sana)</label>
-                    <input type="date" id="task-date">
-                </div>
-                <button class="cta-btn" onclick="addNewTask()"
-                    style="width:100%; padding:14px; background:var(--bg-accent-gradient); color:white; border:none; border-radius:14px; font-weight:700; font-size:15px; margin-top:10px;">
-                    Saqlash
-                </button>
-            </div>
-        </div>
-
-        <!-- LIBRARY VIEW -->
-        <div id="view-library" class="view">
-            <h1>Kutubxona</h1>
-            <p class="subtitle">Barcha manbalar bir joyda</p>
-
-            <div class="search-bar">
-                <i class="bi bi-search"></i>
-                <input type="text" id="lib-search" placeholder="Kitob yoki mavzuni qidiring..."
-                    oninput="filterLibrary()">
-            </div>
-
-            <div class="action-row" id="lib-subjects-filter"
-                style="margin-bottom:20px; overflow-x: auto; scrollbar-width: none;">
-                <div class="action-btn active" onclick="loadLibrary('all', this)">Barchasi</div>
-            </div>
-
-            <div id="lib-materials-list" style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
-                <!-- Materials will be populated by JS -->
-                <div style="text-align:center; padding:40px; color:var(--text-muted);">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p style="margin-top:10px;">Yuklanmoqda...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- PROFILE VIEW -->
-        <div id="view-profile" class="view">
-            <div class="profile-card-new">
-                <div class="profile-avatar-lg" id="profile-avatar-main">A
-                    <div class="edit-icon"><i class="bi bi-pencil-fill"></i></div>
-                </div>
-                <h2 style="display:block; text-align:center;" id="profile-name-main">AbuSaad</h2>
-                <div style="color:var(--text-muted); font-size:13px; margin-bottom:15px;" id="profile-username-main">
-                    @abusaad</div>
-                <div class="plan-badge free" onclick="openPremium()"
-                    style="display:inline-block; font-size:12px; cursor:pointer;">Free User</div>
-
-                <div class="stats-row">
-                    <div class="stat-item"><span class="stat-val">45</span><span class="stat-lbl">Points</span>
-                    </div>
-                    <div class="stat-item"><span class="stat-val">3/10</span><span class="stat-lbl">AI Limit</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="upgrade-cta">
-                <div style="position:relative; z-index:2;">
-                    <h3>Premium ga o'ting 💎</h3>
-                    <p>Cheksiz AI so'rovlar, tezkor javoblar va eksklyuziv materiallar.</p>
-                    <button class="upgrade-btn" onclick="openPremium()">Hoziroq
-                        faollashtirish</button>
-                </div>
-                <i class="bi bi-gem"
-                    style="position:absolute; right:-10px; bottom:-10px; font-size:80px; opacity:0.1;"></i>
-            </div>
-
-            <div class="settings-list">
-                <div class="settings-item">
-                    <div class="settings-label"><i class="bi bi-globe"></i> Ilova tili</div>
-                    <div style="font-size:13px; color:var(--text-muted);">O'zbekcha <i class="bi bi-chevron-right"></i>
-                    </div>
-                </div>
-                <div class="settings-item">
-                    <div class="settings-label"><i class="bi bi-bell"></i> Bildirishnomalar</div>
-                    <div
-                        style="width:40px; height:22px; background:var(--color-success); border-radius:11px; position:relative;">
-                        <div
-                            style="width:18px; height:18px; background:white; border-radius:50%; position:absolute; right:2px; top:2px;">
-                        </div>
-                    </div>
-                </div>
-                <div class="settings-item"
-                    onclick="window.location.href='admin_dashboard.html' + window.location.search + window.location.hash"
-                    id="admin-menu-item" style="display:none;">
-                    <div class="settings-label"><i class="bi bi-shield-lock"></i> Admin Panel</div>
-                    <i class="bi bi-chevron-right"></i>
-                </div>
-                <div class="settings-item">
-                    <div class="settings-label" style="color:var(--color-deadline);"><i class="bi bi-box-arrow-right"
-                            style="color:var(--color-deadline);"></i> Chiqish</div>
-                </div>
-            </div>
-
-            <div style="text-align:center; padding:30px; font-size:11px; color:var(--text-muted);">
-                v3.0.0 • Talaba Bot Services
-            </div>
-        </div>
-
     </div>
 
-    <!-- SCRIPTS -->
+    <!-- Main Content -->
+    <div class="container">
+        <!-- AI Chat Section -->
+        <div class="ai-section">
+            <div class="ai-header">
+                <div class="ai-icon">🤖</div>
+                <div>
+                    <h3>AI Yordamchi</h3>
+                    <p style="font-size: 12px; color: var(--text-muted);">Savollarizga javob beradi</p>
+                </div>
+            </div>
+            <div class="ai-input-wrapper">
+                <textarea class="ai-input" id="chat-input" placeholder="Savol yozing... (Masalan: Matematika yordam)"></textarea>
+                <button class="ai-send-btn" id="send-btn">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+            <div class="quick-actions">
+                <div class="quick-chip" onclick="quickAsk('Referat yozish')">📝 Referat</div>
+                <div class="quick-chip" onclick="quickAsk('Test yaratish')">📊 Test</div>
+                <div class="quick-chip" onclick="quickAsk('Vazifani yechish')">🧮 Uy vazifasi</div>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-container">
+            <div class="progress-header">
+                <span class="progress-label">Kunlik AI limit</span>
+                <span class="progress-value" id="ai-limit">3/10</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="ai-progress" style="width: 30%;"></div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-streak">5</div>
+                <div class="stat-label">Streak</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-points">180</div>
+                <div class="stat-label">Ballar</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-tasks">12</div>
+                <div class="stat-label">Vazifalar</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-days">7</div>
+                <div class="stat-label">Kunlar</div>
+            </div>
+        </div>
+
+        <!-- Tools Section -->
+        <div class="section-title">
+            <span>AI Vositalari</span>
+            <a href="#" onclick="showAllTools()">Barchasi →</a>
+        </div>
+        <div class="tools-grid">
+            <div class="tool-card" onclick="openTool('test-generator')">
+                <div class="tool-icon">📝</div>
+                <div class="tool-name">Test</div>
+            </div>
+            <div class="tool-card" onclick="openTool('referat')">
+                <div class="tool-icon">📄</div>
+                <div class="tool-name">Referat</div>
+            </div>
+            <div class="tool-card" onclick="openTool('presentation')">
+                <div class="tool-icon">📊</div>
+                <div class="tool-name">Taqdimot</div>
+            </div>
+            <div class="tool-card premium" onclick="openPremium()">
+                <div class="tool-icon">🔒</div>
+                <div class="tool-name">Premium</div>
+            </div>
+            <div class="tool-card" onclick="openTool('library')">
+                <div class="tool-icon">📚</div>
+                <div class="tool-name">Kutubxona</div>
+            </div>
+            <div class="tool-card" onclick="openTool('quiz')">
+                <div class="tool-icon">❓</div>
+                <div class="tool-name">Quiz</div>
+            </div>
+        </div>
+
+        <!-- Deadlines Section -->
+        <div class="section-title">
+            <span>Bugungi Vazifalar</span>
+            <a href="#" onclick="openPlanner()">Ko'proq →</a>
+        </div>
+        <div class="deadlines-list" id="deadlines-list">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Premium Card -->
+        <div class="premium-card" id="premium-card">
+            <div class="premium-content">
+                <div class="premium-header">
+                    <div class="premium-title">
+                        <i class="bi bi-gem"></i> Premium
+                    </div>
+                </div>
+                <div class="premium-features">
+                    <div class="premium-feature">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Cheksiz AI so'rovlar</span>
+                    </div>
+                    <div class="premium-feature">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Barcha AI vositalar</span>
+                    </div>
+                    <div class="premium-feature">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Priority qo'llab-quvvatlash</span>
+                    </div>
+                </div>
+                <button class="premium-btn" onclick="openPremium()">
+                    Premium olish - 25,000 so'm
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchView('home')">
+            <i class="bi bi-house-fill"></i>
+            <span>Asosiy</span>
+        </div>
+        <div class="nav-item" onclick="switchView('tools')">
+            <i class="bi bi-grid-fill"></i>
+            <span>Vositalar</span>
+        </div>
+        <div class="nav-item" onclick="switchView('library')">
+            <i class="bi bi-collection-fill"></i>
+            <span>Kutubxona</span>
+        </div>
+        <div class="nav-item" onclick="switchView('profile')">
+            <i class="bi bi-person-fill"></i>
+            <span>Profil</span>
+        </div>
+    </div>
+
     <script>
+        // Initialize Telegram WebApp
         const tg = window.Telegram.WebApp;
-        tg.expand();
         tg.ready();
+        tg.expand();
+
+        // Configuration
+        const API_BASE = new URLSearchParams(window.location.search).get('server') || window.location.origin;
 
         // User data
-        const user = tg.initDataUnsafe?.user || { id: 7949819462, first_name: 'Admin' };
+        let userData = null;
+        let deadlines = [];
+        let chatMessages = [];
 
-        // API Configuration
-        const urlParams = new URLSearchParams(window.location.search);
-        let apiBase = urlParams.get('server');
-        if (!apiBase) {
-            // Try to derive from current origin
-            apiBase = window.location.origin;
-        }
-        apiBase = apiBase.replace(/\/$/, '');
-        console.log('API Base:', apiBase);
-
-        // API Helper Function
-        async function api(endpoint, method = 'GET', body = null) {
-            const headers = {
-                'Content-Type': 'application/json',
-                'ngrok-skip-browser-warning': 'true'
-            };
-            
-            try {
-                const res = await fetch(`${apiBase}${endpoint}`, {
-                    method,
-                    headers,
-                    body: body ? JSON.stringify(body) : null
-                });
-                
-                if (!res.ok) {
-                    throw new Error(`API Error: ${res.status}`);
-                }
-                
-                return await res.json();
-            } catch (e) {
-                console.error(`API Error (${endpoint}):`, e);
-                throw e;
-            }
-        }
-
-        let userTasks = [];
-
+        // Initialize app
         async function initApp() {
-            // Initial UI from Telegram data
-            document.getElementById('header-name').textContent = user.first_name;
-            document.getElementById('header-avatar').textContent = (user.first_name || 'U')[0];
-            document.getElementById('profile-name-main').textContent = user.first_name || 'User';
-            document.getElementById('profile-username-main').textContent = user.username ? '@' + user.username : 'No username';
-            document.getElementById('profile-avatar-main').firstChild.textContent = (user.first_name || 'U')[0];
-
-            // Admin Check (Dynamic from URL parameter)
-            if (urlParams.get('admin') === 'true') {
-                const adminItem = document.getElementById('admin-menu-item');
-                if (adminItem) adminItem.style.display = 'flex';
-            }
-
-            // Fetch Real Data from DB (Optimized: Parallel Fetch)
-            const userFetch = fetch(`${apiBase}/api/user/${user.id}?ngrok-skip-browser-warning=1`, { headers: { 'ngrok-skip-browser-warning': 'true' } });
-            const libFetch = fetch(`${apiBase}/api/library/materials?ngrok-skip-browser-warning=1`, { headers: { 'ngrok-skip-browser-warning': 'true' } });
-            const libSubjectsFetch = fetch(`${apiBase}/api/library/subjects?ngrok-skip-browser-warning=1`, { headers: { 'ngrok-skip-browser-warning': 'true' } });
-
-
             try {
-                const [userRes, libRes, libSubjectsRes] = await Promise.all([userFetch, libFetch, libSubjectsFetch]);
-
-                // Process User Data
-                if (userRes.ok) {
-                    const result = await userRes.json();
-                    if (result.status === 'success') {
-                        const db = result.data;
-                        userTasks = db.deadlines || [];
-
-                        // Update Home Stats
-                        const homeStats = document.querySelectorAll('.stat-card .val');
-                        if (homeStats.length >= 2) {
-                            homeStats[0].textContent = db.ai_requests + '/10';
-                            homeStats[1].textContent = userTasks.length + ' ta';
-                        }
-
-                        // Update Profile Stats
-                        const profileStats = document.querySelectorAll('#view-profile .stat-val');
-                        if (profileStats.length >= 2) {
-                            profileStats[0].textContent = db.referral_count || 0;
-                            profileStats[1].textContent = db.ai_requests + '/10';
-                        }
-
-                        // Plan Badge
-                        const badges = document.querySelectorAll('.plan-badge');
-                        badges.forEach(b => {
-                            if (db.is_premium) { b.className = 'plan-badge premium'; b.textContent = 'PREMIUM'; }
-                            else { b.className = 'plan-badge free'; b.textContent = 'FREE PLAN'; }
-                        });
-
-                        renderHomeDeadlines();
-                        renderPlanner();
-
-                        // Populate Subjects from pre-loaded data if available
-                        // This part of the instruction implies subjects might come from user data,
-                        // but the original initLibrary fetches them separately.
-                        // For now, we'll assume libSubjectsFetch handles it.
-                        // if (db.lib_subjects) {
-                        //     populateSubjects(db.lib_subjects);
-                        // }
-                    }
-                }
-
-                // Process Library Data
-                if (libRes.ok) {
-                    const libData = await libRes.json();
-                    if (libData.status === 'success') {
-                        allMaterials = libData.materials;
-                        renderMaterials(allMaterials);
-                    }
-                } else {
-                    document.getElementById('lib-materials-list').innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Materiallarni yuklab bo\'lmadi</div>';
-                }
-
-                // Process Library Subjects
-                if (libSubjectsRes.ok) {
-                    const subData = await libSubjectsRes.json();
-                    if (subData.status === 'success') {
-                        populateSubjects(subData.subjects);
-                    }
-                }
-
-            } catch (e) {
-                console.error("Data fetch error:", e);
-                // If the fetch failed, show a full screen error with activation link
-                const homeView = document.getElementById('view-home');
-                homeView.innerHTML = `
-                    <div style="text-align:center; padding:50px 20px;">
-                        <div style="font-size:48px; margin-bottom:20px;">🌐</div>
-                        <h2 style="color:#ef4444; justify-content:center;">Ulanishda xato</h2>
-                        <p style="font-size:13px; color:#94a3b8; margin-bottom:25px;">Server (Ngrok) bilan aloqa o'rnatib bo'lmadi. Bu odatda xavfsizlik tekshiruvi tufayli sodir bo'ladi.</p>
-                        
-                        <div class="card glass" style="padding:20px; border-color:var(--bg-accent);">
-                            <p style="font-weight:600; font-size:14px; margin-bottom:10px;">Yechim:</p>
-                            <p style="font-size:12px; margin-bottom:15px; opacity:0.8;">Quyidagi tugmani bosing, ochilgan sahifada "Visit Site" ni tanlang va keyin botga qaytib kirib bu yerni yangilang.</p>
-                            <a href="${apiBase}/api/user/${user.id}?ngrok-skip-browser-warning=1" target="_blank" 
-                               style="display:block; background:var(--bg-accent-gradient); color:white; text-decoration:none; padding:12px; border-radius:12px; font-weight:600;">Ulanishni faollashtirish</a>
-                        </div>
-                        
-                        <button onclick="location.reload()" style="margin-top:30px; background:transparent; border:1px solid var(--border); color:var(--text-muted); padding:10px 20px; border-radius:12px;">Qayta yuklash</button>
-                    </div>
-                `;
-            }
-        }
-        initApp();
-
-        function renderHomeDeadlines() {
-            const dBox = document.getElementById('deadlines-summary');
-            if (!userTasks.length) return;
-
-            let html = '';
-            userTasks.slice(0, 3).forEach(d => {
-                html += `
-                    <div class="deadline-card urgent">
-                        <div class="deadline-info">
-                            <div class="deadline-title">${d.title}</div>
-                            <div class="deadline-sub">Muddati: ${d.due.split('T')[0]}</div>
-                        </div>
-                        <div class="days-badge red">Yaqinda</div>
-                    </div>
-                `;
-            });
-            if (userTasks.length > 3) {
-                html += `<button style="width:100%; padding:12px; background:transparent; border:1px solid var(--border); color:var(--text-muted); border-radius:12px; font-size:13px;" onclick="switchView('planner')">Barchasi →</button>`;
-            }
-            dBox.innerHTML = html;
-        }
-
-        // Planner Rendering
-        function renderPlanner() {
-            // 1. Calendar
-            const cal = document.getElementById('calendar-strip');
-            const now = new Date();
-            let calHtml = '';
-            const daysShort = ['Yak', 'Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha'];
-
-            for (let i = 0; i < 7; i++) {
-                let d = new Date();
-                d.setDate(now.getDate() + i);
-                const isActive = i === 0 ? 'active' : '';
-                calHtml += `
-                    <div class="cal-day ${isActive}">
-                        <span class="day-name">${daysShort[d.getDay()]}</span>
-                        <span class="day-num">${d.getDate()}</span>
-                    </div>
-                `;
-            }
-            cal.innerHTML = calHtml;
-
-            // 2. Tasks
-            const taskContainer = document.getElementById('planner-tasks-list');
-            if (!userTasks.length) {
-                taskContainer.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:14px;"><i class="bi bi-clipboard-x" style="display:block; font-size:32px; margin-bottom:10px; opacity:0.3;"></i>Vazifalar topilmadi</div>';
-                return;
-            }
-
-            let tasksHtml = '';
-            userTasks.forEach(task => {
-                tasksHtml += `
-                    <div class="planner-task-item">
-                        <input type="radio" onclick="deleteTask(${task.id})">
-                        <div class="planner-task-info">
-                            <div style="font-weight:600; font-size:14px;">${task.title}</div>
-                            <div style="font-size:11px; color:var(--text-muted);">${task.due.split('T')[0]}</div>
-                        </div>
-                        <i class="bi bi-trash3 delete-task-btn" onclick="deleteTask(${task.id})"></i>
-                    </div>
-                `;
-            });
-            taskContainer.innerHTML = tasksHtml;
-        }
-
-        function openModal(id) {
-            document.getElementById(id).classList.add('active');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
-
-        async function addNewTask() {
-            const title = document.getElementById('task-title').value;
-            const date = document.getElementById('task-date').value;
-
-            if (!title || !date) {
-                tg.showAlert("Iltimos, barcha maydonlarni to'ldiring");
-                return;
-            }
-
-            try {
-                const data = await api('/api/deadlines/add', 'POST', { user_id: user.id, title: title, due_date: date });
-                if (data.status === 'success') {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    closeModal('add-task-modal');
-                    document.getElementById('task-title').value = '';
-                    initApp(); // Refresh
-                }
-            } catch (e) {
-                tg.showAlert("Serverga ulanib bo'lmadi: " + (e.message || ''));
-            }
-        }
-
-        async function deleteTask(id) {
-            if (!confirm("Vazifani o'chirmoqchimisiz?")) return;
-
-            try {
-                const data = await api('/api/deadlines/delete', 'POST', { deadline_id: id });
-                if (data.status === 'success') {
-                    tg.HapticFeedback.impactOccurred('medium');
-                    initApp(); // Refresh
-                }
-            } catch (e) {
-                tg.showAlert("O'chirishda xatolik: " + (e.message || ''));
-            }
-        }
-
-        // --- Library Logic ---
-        let allMaterials = [];
-        let activeSubject = 'all';
-
-        function populateSubjects(subjects) {
-            const filter = document.getElementById('lib-subjects-filter');
-            // Clear existing except "Barchasi"
-            filter.innerHTML = '<div class="action-btn active" onclick="loadLibrary(\'all\', this)">Barchasi</div>';
-
-            subjects.forEach(sub => {
-                const btn = document.createElement('div');
-                btn.className = 'action-btn';
-                btn.textContent = sub;
-                btn.onclick = (e) => loadLibrary(sub, e.target);
-                filter.appendChild(btn);
-            });
-        }
-
-        async function loadLibrary(subject, el) {
-            activeSubject = subject;
-            if (el) {
-                document.querySelectorAll('#lib-subjects-filter .action-btn').forEach(b => b.classList.remove('active'));
-                el.classList.add('active');
-            }
-
-            const list = document.getElementById('lib-materials-list');
-            list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);"><p>Yuklanmoqda...</p></div>';
-
-            try {
-                let endpoint = '/api/library/materials';
-                if (subject !== 'all') endpoint += `?subject=${encodeURIComponent(subject)}`;
+                // Get user from Telegram
+                const tgUser = tg.initDataUnsafe?.user || { id: 7949819462, first_name: 'Student', username: 'student' };
                 
-                const data = await api(endpoint);
-                if (data.status === 'success') {
-                    allMaterials = data.materials;
-                    renderMaterials(allMaterials);
-                }
-            } catch (e) {
-                list.innerHTML = '<div style="text-align:center; padding:20px; color:#ef4444;">Xatolik: ' + (e.message || '') + '</div>';
+                // Update header
+                document.getElementById('user-avatar').textContent = (tgUser.first_name || 'U')[0];
+                document.getElementById('user-name').textContent = tgUser.first_name || 'Talaba';
+
+                // Fetch user data from API
+                await loadUserData(tgUser.id);
+                await loadDeadlines(tgUser.id);
+
+            } catch (error) {
+                console.error('Init error:', error);
+                showToast('Xatolik yuz berdi', 'error');
             }
         }
 
-        function renderMaterials(materials) {
-            const list = document.getElementById('lib-materials-list');
-            if (materials.length === 0) {
-                list.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">Materiallar topilmadi</div>';
-                return;
+        // Load user data
+        async function loadUserData(userId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/user/${userId}`);
+                const data = await response.json();
+
+                if (data.status === 'success' && data.data) {
+                    userData = data.data;
+
+                    // Update stats
+                    document.getElementById('stat-streak').textContent = userData.streak || 0;
+                    document.getElementById('stat-points').textContent = userData.points || 0;
+                    document.getElementById('stat-tasks').textContent = userData.tasks_completed || 0;
+                    document.getElementById('stat-days').textContent = userData.days_active || 0;
+
+                    // Update AI limit
+                    const used = userData.ai_used || 0;
+                    const limit = userData.ai_limit || 10;
+                    document.getElementById('ai-limit').textContent = `${used}/${limit}`;
+                    document.getElementById('ai-progress').style.width = `${(used/limit)*100}%`;
+
+                    // Update premium status
+                    if (userData.is_premium) {
+                        document.getElementById('user-status').textContent = 'Premium';
+                        document.getElementById('premium-badge').style.display = 'flex';
+                        document.getElementById('premium-card').style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('User data error:', error);
             }
+        }
 
-            let html = '';
-            materials.forEach(m => {
-                let icon = 'bi-file-earmark-text';
-                let color = 'var(--bg-accent)';
-                if (m.type === 'pdf') { icon = 'bi-file-pdf'; color = '#ef4444'; }
-                if (m.type === 'video') { icon = 'bi-play-circle'; color = '#10b981'; }
-                if (m.type === 'audio') { icon = 'bi-music-note-beamed'; color = '#3b82f6'; }
+        // Load deadlines
+        async function loadDeadlines(userId) {
+            const container = document.getElementById('deadlines-list');
 
-                html += `
-                    <div class="stat-card glass" style="padding:15px; display:flex; align-items:center; gap:12px; cursor:pointer;" onclick="window.open('${m.url}', '_blank')">
-                        <div style="width:40px; height:45px; background:${color}33; color:${color}; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:22px;">
-                            <i class="bi ${icon}"></i>
-                        </div>
-                        <div style="flex:1;">
-                            <div style="font-weight:600; font-size:14px; margin-bottom:2px;">${m.title}</div>
-                            <div style="font-size:11px; color:var(--text-muted); display:flex; gap:8px;">
-                                <span>${m.subject}</span> • <span>${m.duration || 'Noma\'lum'}</span>
+            try {
+                const response = await fetch(`${API_BASE}/api/deadlines/${userId}`);
+                const data = await response.json();
+
+                if (data.status === 'success' && data.deadlines) {
+                    deadlines = data.deadlines;
+                    renderDeadlines();
+                } else {
+                    // Show mock data if no deadlines
+                    container.innerHTML = `
+                        <div class="deadline-item">
+                            <div class="deadline-info">
+                                <h4>Matematika kursi</h4>
+                                <span>Oliy matematika • 2 kun qoldi</span>
+                            </div>
+                            <div class="deadline-timer warning">
+                                <i class="bi bi-clock"></i> 2 kun
                             </div>
                         </div>
-                        <i class="bi bi-cloud-arrow-down" style="font-size:20px; color:var(--text-muted);"></i>
+                        <div class="deadline-item">
+                            <div class="deadline-info">
+                                <h4>Fizika laboratoriyasi</h4>
+                                <span>Fizika • 5 kun qoldi</span>
+                            </div>
+                            <div class="deadline-timer safe">
+                                <i class="bi bi-clock"></i> 5 kun
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Deadlines error:', error);
+                container.innerHTML = `
+                    <div class="deadline-item">
+                        <div class="deadline-info">
+                            <h4>Matematika kursi</h4>
+                            <span>Oliy matematika</span>
+                        </div>
+                        <div class="deadline-timer safe">
+                            <i class="bi bi-check"></i> Amalga oshirildi
+                        </div>
                     </div>
                 `;
-            });
-            list.innerHTML = html;
+            }
         }
 
-        function filterLibrary() {
-            const query = document.getElementById('lib-search').value.toLowerCase();
-            const filtered = allMaterials.filter(m =>
-                m.title.toLowerCase().includes(query) ||
-                m.subject.toLowerCase().includes(query) ||
-                (m.desc && m.desc.toLowerCase().includes(query))
-            );
-            renderMaterials(filtered);
+        // Render deadlines
+        function renderDeadlines() {
+            const container = document.getElementById('deadlines-list');
+
+            if (deadlines.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+                        <i class="bi bi-calendar-check" style="font-size: 40px; margin-bottom: 10px;"></i>
+                        <p>Bugungi vazifalar yo'q</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = deadlines.map(d => `
+                <div class="deadline-item" onclick="viewDeadline(${d.id})">
+                    <div class="deadline-info">
+                        <h4>${d.title}</h4>
+                        <span>${d.subject || 'General'}</span>
+                    </div>
+                    <div class="deadline-timer ${d.days_left > 3 ? 'safe' : d.days_left > 1 ? 'warning' : ''}">
+                        <i class="bi bi-clock"></i> ${d.days_left || 1} kun
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // View Navigation
-        function switchView(viewId, el) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-            const target = document.getElementById('view-' + viewId);
-            target.classList.add('active');
-
-            if (el) el.classList.add('active');
-
-            // Set main background or haptic feedback
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-        }
-
-        // Quick AI Logic
-        function quickAI(type) {
-            switchView('ai', document.querySelectorAll('.nav-item')[2]);
+        // Quick ask
+        function quickAsk(text) {
             const input = document.getElementById('chat-input');
-            input.value = type + " bo'yicha yordam ber...";
-            sendChat();
+            input.value = text;
+            input.focus();
         }
 
-        // AI Chat Functionality
+        // Send chat message
         async function sendChat() {
             const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
-            if (!msg) return;
+            const message = input.value.trim();
 
-            addMessage(msg, 'user');
+            if (!message) {
+                showToast('Xabar yozing', 'error');
+                return;
+            }
+
+            // Check limit
+            if (!userData?.is_premium && parseInt(userData?.ai_used || 0) >= parseInt(userData?.ai_limit || 10)) {
+                showToast('Kunlik limit tugadi! Premium oling.', 'error');
+                return;
+            }
+
+            // Add user message to chat
+            addMessage(message, 'user');
             input.value = '';
 
-            // Typing Indicator
-            const history = document.getElementById('chat-history');
-            const typingId = 'typing-' + Date.now();
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'msg ai';
-            typingDiv.id = typingId;
-            typingDiv.innerHTML = '<div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-            history.appendChild(typingDiv);
-            history.scrollTop = history.scrollHeight;
+            // Show typing indicator
+            showTyping();
 
             try {
-                const data = await api('/api/chat', 'POST', { prompt: msg, user_id: user.id });
+                const response = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: message,
+                        user_id: userData?.id || tg.initDataUnsafe?.user?.id
+                    })
+                });
 
-                document.getElementById(typingId).remove();
+                const data = await response.json();
+
+                hideTyping();
 
                 if (data.status === 'success') {
                     addMessage(data.response, 'ai');
+
+                    // Update limit
+                    if (userData) {
+                        userData.ai_used = (userData.ai_used || 0) + 1;
+                        const used = userData.ai_used;
+                        const limit = userData.ai_limit || 10;
+                        document.getElementById('ai-limit').textContent = `${used}/${limit}`;
+                        document.getElementById('ai-progress').style.width = `${(used/limit)*100}%`;
+                    }
                 } else {
-                    addMessage("Xatolik: " + (data.response || data.message || "Noma'lum xato"), 'ai');
+                    addMessage('Xatolik: ' + (data.message || 'Noma\'lum xato'), 'ai');
                 }
-            } catch (e) {
-                if (document.getElementById(typingId)) document.getElementById(typingId).remove();
-                addMessage("Server bilan aloqa uzildi. (" + (e.message || '') + ")", 'ai');
-                console.error("Chat error:", e);
+            } catch (error) {
+                hideTyping();
+                addMessage('Serverga ulanib bo\'lmadi. Keyinroq urinib ko\'ring.', 'ai');
+                console.error('Chat error:', error);
             }
         }
 
+        // Add message to chat
         function addMessage(text, type) {
-            const history = document.getElementById('chat-history');
+            const container = document.getElementById('chat-messages') || document.createElement('div');
+            if (!container.id) {
+                container.id = 'chat-messages';
+                document.querySelector('.ai-section').after(container);
+            }
+
             const msgDiv = document.createElement('div');
-            msgDiv.className = `msg ${type}`;
-            // Basic markdown handling
-            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
-            msgDiv.innerHTML = formatted;
-            history.appendChild(msgDiv);
-            history.scrollTop = history.scrollHeight;
+            msgDiv.className = `message ${type}`;
+            msgDiv.innerHTML = `
+                <div style="
+                    background: ${type === 'user' ? 'var(--accent)' : 'var(--bg-card)'};
+                    border: 1px solid ${type === 'ai' ? 'var(--border)' : 'transparent'};
+                    padding: 12px 16px;
+                    border-radius: var(--radius);
+                    max-width: 85%;
+                    margin: ${type === 'user' ? '8px 0 8px auto' : '8px auto 8px 0'};
+                    font-size: 14px;
+                    line-height: 1.5;
+                ">${text}</div>
+            `;
+            container.appendChild(msgDiv);
         }
 
-        // Search Mock Logic
-        const searchInput = document.querySelector('.search-bar input');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                console.log("Searching for:", e.target.value);
-            });
+        // Show/hide typing indicator
+        function showTyping() {
+            const indicator = document.createElement('div');
+            indicator.id = 'typing-indicator';
+            indicator.className = 'typing-indicator';
+            indicator.innerHTML = '<span></span><span></span><span></span>';
+
+            const container = document.getElementById('chat-messages') || document.querySelector('.ai-section');
+            container.appendChild(indicator);
+            indicator.scrollIntoView({ behavior: 'smooth' });
         }
 
+        function hideTyping() {
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+        }
+
+        // Open tool
+        function openTool(tool) {
+            tg.showAlert(`${tool} funksiyasi: Tez orada qo'shiladi!`);
+        }
+
+        // Open premium
         function openPremium() {
-            window.location.href = 'premium_payment.html' + window.location.search + window.location.hash;
+            window.location.href = 'premium_payment.html' + window.location.search;
         }
 
+        // Open planner
+        function openPlanner() {
+            tg.showAlert('Planner: Tez orada qo\'shiladi!');
+        }
+
+        // View deadline
+        function viewDeadline(id) {
+            tg.showAlert('Vazifa batafsil: Tez orada!');
+        }
+
+        // Switch view
+        function switchView(view) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+        }
+
+        // Show all tools
+        function showAllTools() {
+            tg.showAlert('Barcha vositalar: Tez orada!');
+        }
+
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Event listeners
+        document.getElementById('send-btn').addEventListener('click', sendChat);
+
+        document.getElementById('chat-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendChat();
+            }
+        });
+
+        // Haptic feedback
+        document.querySelectorAll('.tool-card, .quick-chip, .nav-item').forEach(el => {
+            el.addEventListener('click', function() {
+                if (tg.HapticFeedback) {
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            });
+        });
+
+        // Initialize on load
+        initApp();
     </script>
 </body>
-
 </html>

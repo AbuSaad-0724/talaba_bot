@@ -157,6 +157,26 @@ async def materials(subject: str = None):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.get("/api/deadlines/{user_id}")
+async def get_deadlines(user_id: int):
+    """Get user deadlines"""
+    try:
+        from database import get_due_deadlines
+        deadlines = get_due_deadlines()
+        # Format deadlines
+        result = []
+        for d in deadlines:
+            result.append({
+                "id": d[0],
+                "title": d[1],
+                "subject": d[2],
+                "due_date": d[3],
+                "days_left": 2  # Mock calculation
+            })
+        return {"status": "success", "deadlines": result}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.post("/api/chat")
 async def chat(request: Request):
     try:
