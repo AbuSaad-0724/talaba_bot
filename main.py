@@ -23,6 +23,7 @@ import asyncio
 import logging
 import os
 import sys
+import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -92,16 +93,16 @@ app.add_middleware(
 # Define base directory
 BASE_DIR = Path(__file__).resolve().parent
 WEBAPP_DIR = BASE_DIR / "webapp_src"
-STATIC_DIR = WEBAPP_DIR / "static" if (WEBAPP_DIR / "static").exists() else None
 
-# Mount static files if directory exists
-if STATIC_DIR and STATIC_DIR.exists():
-    logger.info(f"Serving static files from: {STATIC_DIR}")
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+# Mount static files from webapp_src root
+# FastAPI's StaticFiles serves ALL files in the directory
+if WEBAPP_DIR.exists():
+    logger.info(f"Serving static files from: {WEBAPP_DIR}")
+    app.mount("/static", StaticFiles(directory=str(WEBAPP_DIR), html=True), name="static")
 else:
-    logger.warning(f"Static directory not found: {STATIC_DIR}. Static serving disabled.")
+    logger.warning(f"Webapp directory not found: {WEBAPP_DIR}")
 
-# Create static directory if it doesn't exist
+# Create uploads directory if it doesn't exist
 STATIC_UPLOADS = WEBAPP_DIR / "uploads"
 if not STATIC_UPLOADS.exists():
     STATIC_UPLOADS.mkdir(parents=True, exist_ok=True)
@@ -410,13 +411,13 @@ async def on_startup(bot: Bot):
     asyncio.create_task(reminders_loop(bot))
     asyncio.create_task(cleanup_loop())
     
-    logger.info("✅ Bot startup complete")
+    logger.info("Bot startup complete")
 
 async def on_shutdown(bot: Bot):
     """Called when bot shuts down"""
     logger.info("🤖 Bot shutting down...")
     await bot.session.close()
-    logger.info("✅ Bot shutdown complete")
+    logger.info("Bot shutdown complete")
 
 # Register startup/shutdown handlers
 dp.startup.register(on_startup)
@@ -442,17 +443,17 @@ async def start_webhook_mode():
     webhook_url = os.environ.get("WEBHOOK_URL", "").rstrip("/")
     
     if not webhook_url:
-        logger.warning("WEBHOOK_URL not set! Using ngrok-compatible URL...")
+        logger.warning("WEBHOOK_URL not set! Using default...")
         webhook_url = "https://your-ngrok-url.ngrok-free.app"
     
-    logger.info(f"🔗 Setting webhook to: {webhook_url}/webhook")
+    logger.info(f"Setting webhook to: {webhook_url}/webhook")
     
     try:
         await bot.set_webhook(
             url=f"{webhook_url}/webhook",
             drop_pending_updates=True
         )
-        logger.info("✅ Webhook set successfully!")
+        logger.info("Webhook set successfully!")
         
         # Start FastAPI server
         config = uvicorn.Config(
@@ -472,7 +473,7 @@ async def start_webhook_mode():
 
 async def start_server_only():
     """Start only the web server (no bot polling)"""
-    logger.info("🌐 Starting web server only (webhook mode)...")
+    logger.info("Starting web server only (webhook mode)...")
     config = uvicorn.Config(app, host="0.0.0.0", port=8080, log_level="info")
     server = uvicorn.Server(config)
     await server.serve()
@@ -502,7 +503,7 @@ def main():
     
     # Initialize database
     init_db()
-    logger.info("📦 Database initialized")
+    logger.info("Database initialized")
     
     # Run based on mode
     if args.mode == "polling":
