@@ -45,7 +45,7 @@ from database import init_db, DB_PATH
 # FastAPI App Setup
 # ============================================================================
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, Response, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -103,7 +103,7 @@ logger.info(f"Uploads mounted: /static/uploads -> {UPLOADS_DIR}")
 # Root Endpoint - Serve Telegram Web App
 # ============================================================================
 
-@app.get("/", response_class=FileResponse)
+@app.get("/")
 async def root():
     """
     Serve the main Telegram Web App at root URL.
@@ -111,17 +111,17 @@ async def root():
     """
     index_path = WEBAPP_DIR / "index.html"
     if index_path.exists():
+        with open(index_path, 'r', encoding='utf-8') as f:
+            content = f.read()
         logger.info(f"Serving index.html from: {index_path}")
-        return FileResponse(index_path)
+        return Response(content=content, media_type="text/html")
     else:
         logger.error(f"index.html not found at: {index_path}")
-        raise HTTPException(status_code=404, detail="Web App not found")
+        return {"status": "error", "message": "Web App not found", "path": str(index_path)}
 
 @app.get("/webapp")
 async def webapp():
-    """
-    Alternative route for web app access.
-    """
+    """Alternative route for web app access."""
     return await root()
 
 # ============================================================================
@@ -320,7 +320,7 @@ dp = Dispatcher()
 
 # Import handlers
 from handlers import admin, common, student_tools, library, resources, referral
-from handlers.premium import homework_solver
+from handlers.premium import homework_solver, payment
 
 dp.include_router(admin.router)
 dp.include_router(common.router)
@@ -329,6 +329,7 @@ dp.include_router(student_tools.router)
 dp.include_router(library.router)
 dp.include_router(resources.router)
 dp.include_router(homework_solver.router)
+dp.include_router(payment.router)
 
 logger.info("Telegram handlers registered")
 
