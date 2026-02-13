@@ -34,3 +34,6 @@ Thumbs.db
 
 # Bot specific
 talaba_superbot.db
+config.env
+ngrok.exe
+backup/

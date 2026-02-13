@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Talaba Bot - Professional AI Yordamchi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-shadow {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .premium-badge {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <div class="bg-white rounded-2xl p-6 card-shadow">
+                <h1
+                    class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-2">
+                    <i class="fas fa-robot mr-2"></i>Talaba Bot
+                </h1>
+                <p class="text-gray-600 text-lg">Professional AI yordamida o'quv materiallari generatori</p>
+                <div class="mt-4 flex justify-center space-x-4">
+                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        <i class="fas fa-check-circle mr-1"></i>Professional Sifat
+                    </span>
+                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        <i class="fas fa-shield-alt mr-1"></i>Xavfsiz
+                    </span>
+                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        <i class="fas fa-bolt mr-1"></i>Tezkor
+                    </span>
+                </div>
+            </div>
+        </header>
+
+        <!-- User Info Card -->
+        <div id="userInfo" class="bg-white rounded-2xl p-6 mb-6 card-shadow">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">
+                        <i class="fas fa-user-circle mr-2 text-purple-600"></i>Foydalanuvchi ma'lumoti
+                    </h2>
+                    <div class="space-y-2">
+                        <p class="text-gray-600">
+                            <i class="fas fa-wallet mr-2 text-green-500"></i>
+                            Balans: <span id="balance" class="font-bold text-green-600">0 so'm</span>
+                        </p>
+                        <p class="text-gray-600">
+                            <i class="fas fa-crown mr-2 text-yellow-500"></i>
+                            Status: <span id="status" class="font-bold text-orange-600">Oddiy</span>
+                        </p>
+                        <p class="text-gray-600">
+                            <i class="fas fa-file-alt mr-2 text-blue-500"></i>
+                            Yaratilgan: <span id="contentCount" class="font-bold text-blue-600">0 ta</span>
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Content Generator Tabs -->
+        <div class="bg-white rounded-2xl p-6 mb-6 card-shadow">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="showTab('referat')"
+                        class="tab-btn active py-3 px-1 border-b-2 border-purple-500 font-medium text-sm text-purple-600 hover:text-purple-700 transition">
+                        <i class="fas fa-file-alt mr-2"></i>Referat
+                    </button>
+                    <button onclick="showTab('prezentatsiya')"
+                        class="tab-btn py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 transition">
+                        <i class="fas fa-presentation mr-2"></i>Prezentatsiya
+                    </button>
+                    <button onclick="showTab('insho')"
+                        class="tab-btn py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 transition">
+                        <i class="fas fa-pen mr-2"></i>Insho
+                    </button>
+                    <button onclick="showTab('test')"
+                        class="tab-btn py-3 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300 transition">
+                        <i class="fas fa-question-circle mr-2"></i>Test
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="mt-6">
+                <!-- Referat Tab -->
+                <div id="referat-tab" class="tab-content">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="fas fa-file-alt mr-2 text-purple-600"></i>Professional Referat yaratish
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-lightbulb mr-1"></i>Mavzu
+                            </label>
+                            <input type="text" id="referat-topic"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                                placeholder="Masalan: Sun'iy intellekt va uning ta'limdagi o'rni">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-file mr-1"></i>Hajmi (bet)
+                            </label>
+                            <select id="referat-size"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                                <option value="5">5 bet - Qisqa</option>
+                                <option value="10" selected>10 bet - O'rtacha</option>
+                                <option value="15">15 bet - To'liq</option>
+                                <option value="20">20 bet - Chuqur</option>
+                            </select>
+                        </div>
+                        <button onclick="generateReferat()"
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-4 rounded-lg font-bold text-lg transition transform hover:scale-105">
+                            <i class="fas fa-magic mr-2"></i>Professional Referat yaratish
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Prezentatsiya Tab -->
+                <div id="prezentatsiya-tab" class="tab-content hidden">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="fas fa-presentation mr-2 text-purple-600"></i>Professional Prezentatsiya yaratish
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-lightbulb mr-1"></i>Mavzu
+                            </label>
+                            <input type="text" id="prez-topic"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                                placeholder="Masalan: Blockchain texnologiyalari va ularning kelajagi">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-images mr-1"></i>Slaydlar soni
+                            </label>
+                            <select id="prez-slides"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                                <option value="5">5 slayd - Qisqa</option>
+                                <option value="10" selected>10 slayd - O'rtacha</option>
+                                <option value="15">15 slayd - To'liq</option>
+                            </select>
+                        </div>
+                        <button onclick="generatePrezentatsiya()"
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-4 rounded-lg font-bold text-lg transition transform hover:scale-105">
+                            <i class="fas fa-presentation mr-2"></i>Professional Prezentatsiya yaratish
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Insho Tab -->
+                <div id="insho-tab" class="tab-content hidden">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="fas fa-pen mr-2 text-purple-600"></i>Professional Insho yaratish
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-lightbulb mr-1"></i>Mavzu
+                            </label>
+                            <input type="text" id="insho-topic"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                                placeholder="Masalan: Global isish muammosi va uning yechimlari">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-pen-fancy mr-1"></i>Insho turi
+                            </label>
+                            <select id="insho-type"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                                <option value="argumentativ">Argumentativ insho - Dalillar bilan</option>
+                                <option value="tahliliy">Tahliliy insho - Tahlil bilan</option>
+                                <option value="tavsifiy">Tavsifiy insho - Tavsif bilan</option>
+                            </select>
+                        </div>
+                        <button onclick="generateInsho()"
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-4 rounded-lg font-bold text-lg transition transform hover:scale-105">
+                            <i class="fas fa-pen mr-2"></i>Professional Insho yaratish
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Test Tab -->
+                <div id="test-tab" class="tab-content hidden">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800">
+                        <i class="fas fa-question-circle mr-2 text-purple-600"></i>Professional Test yaratish
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-lightbulb mr-1"></i>Mavzu
+                            </label>
+                            <input type="text" id="test-topic"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                                placeholder="Masalan: O'zbekiston mustaqilligi tarixi">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class="fas fa-list-ol mr-1"></i>Savollar soni
+                            </label>
+                            <select id="test-count"
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition">
+                                <option value="5">5 savol - Qisqa test</option>
+                                <option value="10" selected>10 savol - O'rtacha test</option>
+                                <option value="15">15 savol - To'liq test</option>
+                            </select>
+                        </div>
+                        <button onclick="generateTest()"
+                            class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-4 rounded-lg font-bold text-lg transition transform hover:scale-105">
+                            <i class="fas fa-question-circle mr-2"></i>Professional Test yaratish
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loading" class="hidden bg-white rounded-2xl p-8 mb-6 card-shadow text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-600 text-lg">AI kontent yaratmoqda...</p>
+            <p class="text-gray-500 text-sm">Iltimos, biroz kutib turing</p>
+        </div>
+
+        <!-- Generated Content -->
+        <div id="result" class="bg-white rounded-2xl p-6 mb-6 card-shadow hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-800">
+                    <i class="fas fa-check-circle mr-2 text-green-600"></i>Natija
+                </h3>
+                <div class="flex space-x-2">
+                    <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        <i class="fas fa-star mr-1"></i>Professional Sifat
+                    </span>
+                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                        <i class="fas fa-check mr-1"></i>Tekshirilgan
+                    </span>
+                </div>
+            </div>
+            <div id="result-content" class="prose max-w-none bg-gray-50 rounded-lg p-4"></div>
+            <div class="mt-6 flex space-x-4">
+                <button onclick="copyResult()"
+                    class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105">
+                    <i class="fas fa-copy mr-2"></i>Nusxa olish
+                </button>
+                <button onclick="downloadResult()"
+                    class="flex-1 bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105">
+                    <i class="fas fa-file-alt mr-2"></i>.txt Yuklab
+                </button>
+                <button id="pptxBtn" onclick="downloadPptx()"
+                    class="hidden flex-1 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105">
+                    <i class="fas fa-file-powerpoint mr-2"></i>.pptx Yuklab
+                </button>
+                <button onclick="shareResult()"
+                    class="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105">
+                    <i class="fas fa-share mr-2"></i>Ulashish
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 card-shadow">
+            <div class="text-center mb-6">
+                <div
+                    class="premium-badge text-white text-4xl w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Premium sotib olish</h3>
+                <p class="text-gray-600">Cheksiz imkoniyatlar uchun!</p>
+            </div>
+
+            <div class="mb-6">
+                <p class="text-gray-600 mb-4 text-center">
+                    <span class="text-3xl font-bold text-green-600">50,000</span> so'm/oy
+                </p>
+                <ul class="text-sm text-gray-600 space-y-2">
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Cheksiz referatlar yaratish
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Cheksiz prezentatsiyalar tayyorlash
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Cheksiz insholar yozish
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Cheksiz testlar yaratish
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Yuqori sifatli natijalar
+                    </li>
+                    <li class="flex items-center">
+                        <i class="fas fa-check text-green-500 mr-2"></i>
+                        Tezkor xizmat (24/7)
+                    </li>
+                </ul>
+            </div>
+
+            <form onsubmit="submitPayment(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-credit-card mr-1"></i>Karta raqami
+                        </label>
+                        <input type="text" id="cardNumber" required
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                            placeholder="8600 1234 5678 9012">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user mr-1"></i>Karta egasi
+                        </label>
+                        <input type="text" id="cardHolder" required
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                            placeholder="ISMI FAMILIYASI">
+                    </div>
+                    <div class="flex space-x-4">
+                        <button type="button" onclick="hidePaymentModal()"
+                            class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-3 rounded-lg font-semibold transition">
+                            <i class="fas fa-times mr-2"></i>Bekor qilish
+                        </button>
+                        <button type="submit"
+                            class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-lg font-semibold transition">
+                            <i class="fas fa-lock mr-2"></i>To'lov qilish
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let currentResult = '';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function () {
+            loadUserInfo();
+        });
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-purple-500', 'text-purple-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.remove('hidden');
+
+            // Add active class to clicked button
+            event.target.classList.remove('border-transparent', 'text-gray-500');
+            event.target.classList.add('active', 'border-purple-500', 'text-purple-600');
+        }
+
+        // Payment functions removed as per request
+
+
+        // Content Generation
+        async function generateReferat() {
+            const topic = document.getElementById('referat-topic').value;
+            const size = document.getElementById('referat-size').value;
+
+            if (!topic) {
+                alert('❌ Iltimos, mavzuni kiriting!');
+                return;
+            }
+
+            await generateContent('referat', topic, { size });
+        }
+
+        async function generatePrezentatsiya() {
+            const topic = document.getElementById('prez-topic').value;
+            const slides = document.getElementById('prez-slides').value;
+
+            if (!topic) {
+                alert('❌ Iltimos, mavzuni kiriting!');
+                return;
+            }
+
+            await generateContent('prezentatsiya', topic, { slides });
+        }
+
+        async function generateInsho() {
+            const topic = document.getElementById('insho-topic').value;
+            const type = document.getElementById('insho-type').value;
+
+            if (!topic) {
+                alert('❌ Iltimos, mavzuni kiriting!');
+                return;
+            }
+
+            await generateContent('insho', topic, { type });
+        }
+
+        async function generateTest() {
+            const topic = document.getElementById('test-topic').value;
+            const count = document.getElementById('test-count').value;
+
+            if (!topic) {
+                alert('❌ Iltimos, mavzuni kiriting!');
+                return;
+            }
+
+            await generateContent('test', topic, { count });
+        }
+
+        async function generateContent(type, topic, params) {
+            showLoading();
+
+            const response = await fetch('/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    type: type,
+                    topic: topic,
+                    params: params
+                })
+            });
+
+            const result = await response.json();
+
+            hideLoading();
+
+            if (result.success) {
+                currentResult = result.content;
+                showResult(result.content);
+                updateContentCount();
+            } else {
+                alert('❌ Xatolik: ' + result.message);
+            }
+        }
+    </script>
+
+    <script src="https://admin.h-p.uz/js/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .prose h1 {
+            font-size: 1.875rem;
+            line-height: 2.25rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .prose h2 {
+            font-size: 1.5rem;
+            line-height: 2rem;
+            font-weight: 700;
+            margin-top: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: #1f2937;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.5rem;
+        }
+
+        .prose h3 {
+            font-size: 1.25rem;
+            line-height: 1.75rem;
+            font-weight: 700;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            color: #6d28d9;
+        }
+
+        .prose p {
+            margin-bottom: 1rem;
+            line-height: 1.625;
+            color: #374151;
+        }
+
+        .prose ul {
+            list-style-type: disc;
+            list-style-position: inside;
+            margin-bottom: 1rem;
+            margin-left: 1rem;
+        }
+
+        .prose ol {
+            list-style-type: decimal;
+            list-style-position: inside;
+            margin-bottom: 1rem;
+            margin-left: 1rem;
+        }
+
+        .prose li {
+            color: #374151;
+        }
+
+        .prose strong {
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .prose em {
+            font-style: italic;
+            color: #4b5563;
+        }
+
+        .prose blockquote {
+            border-left-width: 4px;
+            border-color: #8b5cf6;
+            padding-left: 1rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f9fafb;
+            font-style: italic;
+        }
+
+        .prose code {
+            background-color: #f3f4f6;
+            border-radius: 0.25rem;
+            padding: 0.125rem 0.25rem;
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: #db2777;
+        }
+
+        .prose pre {
+            background-color: #1f2937;
+            color: #ffffff;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            overflow-x: auto;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+    <script>
+        function showResult(content) {
+            // Updated showResult logic to handle PPTX button visibility
+            const pptxBtn = document.getElementById('pptxBtn');
+            const prezTab = document.getElementById('prezentatsiya-tab');
+
+            if (prezTab && !prezTab.classList.contains('hidden')) {
+                pptxBtn.classList.remove('hidden');
+            } else {
+                if (pptxBtn) pptxBtn.classList.add('hidden');
+            }
+
+            // Use marked library if available, otherwise fallback to simple replacement
+            let htmlContent = '';
+            if (typeof marked !== 'undefined' && marked.parse) {
+                htmlContent = marked.parse(content);
+            } else {
+                htmlContent = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            }
+
+            document.getElementById('result-content').innerHTML = htmlContent;
+            document.getElementById('result').classList.remove('hidden');
+
+            // Scroll to result
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function downloadPptx() {
+            if (!currentResult) return;
+
+            // Get current topic
+            let topic = "Presentation";
+            const topicInput = document.getElementById('prez-topic');
+            if (topicInput && topicInput.value) topic = topicInput.value;
+
+            showLoading();
+
+            try {
+                const response = await fetch('/api/download-pptx', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: currentResult,
+                        topic: topic
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = topic.replace(/[^\w]/gi, '_') + ".pptx";
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                } else {
+                    alert("Fayl yaratishda xatolik!");
+                }
+            } catch (e) {
+                alert("Xatolik: " + e);
+            } finally {
+                hideLoading();
+                document.getElementById('result').classList.remove('hidden');
+            }
+        }
+
+        function copyResult() {
+            navigator.clipboard.writeText(currentResult);
+            alert('✅ Nusxa olindi!');
+        }
+
+        function downloadResult() {
+            const blob = new Blob([currentResult], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `talaba_bot_${Date.now()}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function shareResult() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Talaba Bot - Professional Kontent',
+                    text: 'Professional AI yordamida yaratilgan kontent',
+                    url: window.location.href
+                });
+            } else {
+                alert('📱 Ushbu brauzerda ulashish funksiyasi mavjud emas');
+            }
+        }
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user-info');
+                const user = await response.json();
+                currentUser = user;
+
+                document.getElementById('balance').textContent = user.balance.toLocaleString() + ' so\'m';
+                document.getElementById('status').textContent = user.is_premium ? 'Premium 👑' : 'Oddiy';
+                document.getElementById('status').className = user.is_premium ? 'font-bold text-green-600' : 'font-bold text-orange-600';
+                document.getElementById('contentCount').textContent = user.content_count + ' ta';
+            } catch (error) {
+                console.error('Failed to load user info:', error);
+            }
+        }
+
+        function updateContentCount() {
+            const countElement = document.getElementById('contentCount');
+            const currentCount = parseInt(countElement.textContent);
+            countElement.textContent = (currentCount + 1) + ' ta';
+        }
+    </script>
+</body>
+
+</html>
